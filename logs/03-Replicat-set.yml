@@ -1,0 +1,115 @@
+[kubeuser@medGPT manifest]$ cat 03-Replica-set.yml
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: replica-set1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+        app: demoapp
+  template:
+    metadata:
+      labels:
+        app: demoapp
+    spec:
+      containers:
+      - name: replicacontainer
+        image: nginx
+        ports:
+         - containerPort: 80
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ k get pods
+NAME                 READY   STATUS    RESTARTS   AGE
+multi-conainer-pod   2/2     Running   0          74m
+web-pod              1/1     Running   0          89m
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ kubectl apply -f 03-Replica-set.yml
+replicaset.apps/replica-set1 created
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ k get pods
+NAME                 READY   STATUS              RESTARTS   AGE
+multi-conainer-pod   2/2     Running             0          74m
+replica-set1-nlmsm   0/1     ContainerCreating   0          3s
+replica-set1-nvzbk   1/1     Running             0          3s
+web-pod              1/1     Running             0          89m
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ k describe rs replica-set1
+Name:         replica-set1
+Namespace:    default
+Selector:     app=demoapp
+Labels:       <none>
+Annotations:  <none>
+Replicas:     2 current / 2 desired
+Pods Status:  2 Running / 0 Waiting / 0 Succeeded / 0 Failed
+Pod Template:
+  Labels:  app=demoapp
+  Containers:
+   replicacontainer:
+    Image:         nginx
+    Port:          80/TCP
+    Host Port:     0/TCP
+    Environment:   <none>
+    Mounts:        <none>
+  Volumes:         <none>
+  Node-Selectors:  <none>
+  Tolerations:     <none>
+Events:
+  Type    Reason            Age   From                   Message
+  ----    ------            ----  ----                   -------
+  Normal  SuccessfulCreate  17s   replicaset-controller  Created pod: replica-set1-nlmsm
+  Normal  SuccessfulCreate  17s   replicaset-controller  Created pod: replica-set1-nvzbk
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ k get pods
+NAME                 READY   STATUS    RESTARTS   AGE
+multi-conainer-pod   2/2     Running   0          75m
+replica-set1-nlmsm   1/1     Running   0          26s
+replica-set1-nvzbk   1/1     Running   0          26s
+web-pod              1/1     Running   0          89m
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ k get rs
+NAME           DESIRED   CURRENT   READY   AGE
+replica-set1   2         2         2       39s
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ k delete pod replica-set1-nlmsm
+pod "replica-set1-nlmsm" deleted from default namespace
+^[[A[kubeuser@medGPT manifest]$ k get pods
+NAME                 READY   STATUS    RESTARTS   AGE
+multi-conainer-pod   2/2     Running   0          75m
+replica-set1-54km5   1/1     Running   0          3s
+replica-set1-nvzbk   1/1     Running   0          73s
+web-pod              1/1     Running   0          90m
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ k describe rs replica-set1
+Name:         replica-set1
+Namespace:    default
+Selector:     app=demoapp
+Labels:       <none>
+Annotations:  <none>
+Replicas:     2 current / 2 desired
+Pods Status:  2 Running / 0 Waiting / 0 Succeeded / 0 Failed
+Pod Template:
+  Labels:  app=demoapp
+  Containers:
+   replicacontainer:
+    Image:         nginx
+    Port:          80/TCP
+    Host Port:     0/TCP
+    Environment:   <none>
+    Mounts:        <none>
+  Volumes:         <none>
+  Node-Selectors:  <none>
+  Tolerations:     <none>
+Events:
+  Type    Reason            Age   From                   Message
+  ----    ------            ----  ----                   -------
+  Normal  SuccessfulCreate  83s   replicaset-controller  Created pod: replica-set1-nlmsm
+  Normal  SuccessfulCreate  83s   replicaset-controller  Created pod: replica-set1-nvzbk
+  Normal  SuccessfulCreate  13s   replicaset-controller  Created pod: replica-set1-54km5
+[kubeuser@medGPT manifest]$
+
