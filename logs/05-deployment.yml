@@ -1,0 +1,166 @@
+[kubeuser@medGPT manifest]$ cat 05-deployment.yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+       app: GPT
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+       maxSurge: 1
+       maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: GPT
+    spec:
+      containers:
+       - name: deplyment-container
+         image: nginx
+         ports:
+          - containerPort: 80
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ kubectl get pods --show-labels
+NAME                            READY   STATUS    RESTARTS   AGE   LABELS
+different-label-testing-5ms5n   1/1     Running   0          32m   type=mult-container
+different-label-testing-jprd5   1/1     Running   0          32m   type=mult-container
+multi-conainer-pod              2/2     Running   0          18h   env=dev,type=mult-container
+replica-set1-54km5              1/1     Running   0          17h   app=demoapp
+replica-set1-jf9g5              1/1     Running   0          17h   app=demoapp
+web-pod                         1/1     Running   0          19h   env=dev,tier=web
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ k apply -f 05-deployment.yml
+deployment.apps/deployment-1 created
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ kubectl get pods --show-labels
+NAME                            READY   STATUS              RESTARTS   AGE   LABELS
+deployment-1-5df99565d4-6p6p5   1/1     Running             0          5s    app=GPT,pod-template-hash=5df99565d4
+deployment-1-5df99565d4-7mbwt   1/1     Running             0          5s    app=GPT,pod-template-hash=5df99565d4
+deployment-1-5df99565d4-khd6z   0/1     ContainerCreating   0          5s    app=GPT,pod-template-hash=5df99565d4
+different-label-testing-5ms5n   1/1     Running             0          32m   type=mult-container
+different-label-testing-jprd5   1/1     Running             0          32m   type=mult-container
+multi-conainer-pod              2/2     Running             0          18h   env=dev,type=mult-container
+replica-set1-54km5              1/1     Running             0          17h   app=demoapp
+replica-set1-jf9g5              1/1     Running             0          17h   app=demoapp
+web-pod                         1/1     Running             0          19h   env=dev,tier=web
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ k describe deployment deployment-1
+Name:                   deployment-1
+Namespace:              default
+CreationTimestamp:      Sun, 25 Oct 2026 08:51:39 -0400
+Labels:                 <none>
+Annotations:            deployment.kubernetes.io/revision: 1
+Selector:               app=GPT
+Replicas:               3 desired | 3 updated | 3 total | 3 available | 0 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  0 max unavailable, 1 max surge
+Pod Template:
+  Labels:  app=GPT
+  Containers:
+   deplyment-container:
+    Image:         nginx
+    Port:          80/TCP
+    Host Port:     0/TCP
+    Environment:   <none>
+    Mounts:        <none>
+  Volumes:         <none>
+  Node-Selectors:  <none>
+  Tolerations:     <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      True    MinimumReplicasAvailable
+  Progressing    True    NewReplicaSetAvailable
+OldReplicaSets:  <none>
+NewReplicaSet:   deployment-1-5df99565d4 (3/3 replicas created)
+Events:
+  Type    Reason             Age   From                   Message
+  ----    ------             ----  ----                   -------
+  Normal  ScalingReplicaSet  16s   deployment-controller  Scaled up replica set deployment-1-5df99565d4 from 0 to 3
+[kubeuser@medGPT manifest]$ k describe deployment deployment-1
+Name:                   deployment-1
+Namespace:              default
+CreationTimestamp:      Sun, 25 Oct 2026 08:51:39 -0400
+Labels:                 <none>
+Annotations:            deployment.kubernetes.io/revision: 1
+Selector:               app=GPT
+Replicas:               3 desired | 3 updated | 3 total | 3 available | 0 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  0 max unavailable, 1 max surge
+Pod Template:
+  Labels:  app=GPT
+  Containers:
+   deplyment-container:
+    Image:         nginx
+    Port:          80/TCP
+    Host Port:     0/TCP
+    Environment:   <none>
+    Mounts:        <none>
+  Volumes:         <none>
+  Node-Selectors:  <none>
+  Tolerations:     <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      True    MinimumReplicasAvailable
+  Progressing    True    NewReplicaSetAvailable
+OldReplicaSets:  <none>
+NewReplicaSet:   deployment-1-5df99565d4 (3/3 replicas created)
+Events:
+  Type    Reason             Age   From                   Message
+  ----    ------             ----  ----                   -------
+  Normal  ScalingReplicaSet  20s   deployment-controller  Scaled up replica set deployment-1-5df99565d4 from 0 to 3
+[kubeuser@medGPT manifest]$ kubectl get pods --show-labels
+NAME                            READY   STATUS    RESTARTS   AGE   LABELS
+deployment-1-5df99565d4-6p6p5   1/1     Running   0          25s   app=GPT,pod-template-hash=5df99565d4
+deployment-1-5df99565d4-7mbwt   1/1     Running   0          25s   app=GPT,pod-template-hash=5df99565d4
+deployment-1-5df99565d4-khd6z   1/1     Running   0          25s   app=GPT,pod-template-hash=5df99565d4
+different-label-testing-5ms5n   1/1     Running   0          33m   type=mult-container
+different-label-testing-jprd5   1/1     Running   0          33m   type=mult-container
+multi-conainer-pod              2/2     Running   0          18h   env=dev,type=mult-container
+replica-set1-54km5              1/1     Running   0          17h   app=demoapp
+replica-set1-jf9g5              1/1     Running   0          17h   app=demoapp
+web-pod                         1/1     Running   0          19h   env=dev,tier=web
+[kubeuser@medGPT manifest]$ k describe deployment deployment-1
+Name:                   deployment-1
+Namespace:              default
+CreationTimestamp:      Sun, 25 Oct 2026 08:51:39 -0400
+Labels:                 <none>
+Annotations:            deployment.kubernetes.io/revision: 1
+Selector:               app=GPT
+Replicas:               3 desired | 3 updated | 3 total | 3 available | 0 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  0 max unavailable, 1 max surge
+Pod Template:
+  Labels:  app=GPT
+  Containers:
+   deplyment-container:
+    Image:         nginx
+    Port:          80/TCP
+    Host Port:     0/TCP
+    Environment:   <none>
+    Mounts:        <none>
+  Volumes:         <none>
+  Node-Selectors:  <none>
+  Tolerations:     <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      True    MinimumReplicasAvailable
+  Progressing    True    NewReplicaSetAvailable
+OldReplicaSets:  <none>
+NewReplicaSet:   deployment-1-5df99565d4 (3/3 replicas created)
+Events:
+  Type    Reason             Age   From                   Message
+  ----    ------             ----  ----                   -------
+  Normal  ScalingReplicaSet  31s   deployment-controller  Scaled up replica set deployment-1-5df99565d4 from 0 to 3
+[kubeuser@medGPT manifest]$
