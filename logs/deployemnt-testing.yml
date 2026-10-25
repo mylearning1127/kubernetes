@@ -397,3 +397,47 @@ replica-set1-54km5              replicacontainer                   nginx
 replica-set1-jf9g5              replicacontainer                   nginx
 web-pod                         container-1                        nginx
 [kubeuser@medGPT manifest]$
+
+[kubeuser@medGPT manifest]$ kubectl rollout history deployment/deployment-1
+deployment.apps/deployment-1
+REVISION  CHANGE-CAUSE
+1         <none>
+3         <none>
+4         <none>
+
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ kubectl rollout history deployment/deployment-1 --revision=3
+deployment.apps/deployment-1 with revision #3
+Pod Template:
+  Labels:       app=GPT
+        pod-template-hash=6954477d97
+  Containers:
+   deplyment-container:
+    Image:      nginx:1.28
+    Port:       80/TCP
+    Host Port:  0/TCP
+    Environment:        <none>
+    Mounts:     <none>
+  Volumes:      <none>
+  Node-Selectors:       <none>
+  Tolerations:  <none>
+
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ kubectl rollout history deployment/deployment-1 --revision=4
+deployment.apps/deployment-1 with revision #4
+Pod Template:
+  Labels:       app=GPT
+        pod-template-hash=84f65b66db
+  Containers:
+   deplyment-container:
+    Image:      nginx:1.29
+    Port:       80/TCP
+    Host Port:  0/TCP
+    Environment:        <none>
+    Mounts:     <none>
+  Volumes:      <none>
+  Node-Selectors:       <none>
+  Tolerations:  <none>
+
+[kubeuser@medGPT manifest]$
+
