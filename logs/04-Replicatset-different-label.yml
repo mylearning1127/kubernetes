@@ -1,0 +1,141 @@
+[kubeuser@medGPT manifest]$ cat 04-Replicatset-different-label.yml
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: different-label-testing
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+       tier: web
+  template:
+    metadata:
+      labels:
+        type: mult-container
+    spec:
+      containers:
+        - name: webcontainer
+          image: nginx
+          ports:
+            - containerPort: 80
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ kubectl get pods --show-labels
+NAME                 READY   STATUS    RESTARTS   AGE   LABELS
+multi-conainer-pod   2/2     Running   0          18h   env=dev,type=mult-container
+replica-set1-54km5   1/1     Running   0          17h   app=demoapp
+replica-set1-jf9g5   1/1     Running   0          16h   app=demoapp
+web-pod              1/1     Running   0          18h   env=dev,tier=web
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ k apply -f 04-Replicatset-different-label.yml
+The ReplicaSet "different-label-testing" is invalid: spec.template.metadata.labels: Invalid value: {"type":"mult-container"}: `selector` does not match template `labels`
+[kubeuser@medGPT manifest]$ vi 04-Replicatset-different-label.yml
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ cat 04-Replicatset-different-label.yml
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: different-label-testing
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      type: mult-container
+  template:
+    metadata:
+      labels:
+        type: web
+    spec:
+      containers:
+        - name: webcontainer
+          image: nginx
+          ports:
+            - containerPort: 80
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ kubectl get pods --show-labels
+NAME                 READY   STATUS    RESTARTS   AGE   LABELS
+multi-conainer-pod   2/2     Running   0          18h   env=dev,type=mult-container
+replica-set1-54km5   1/1     Running   0          17h   app=demoapp
+replica-set1-jf9g5   1/1     Running   0          16h   app=demoapp
+web-pod              1/1     Running   0          18h   env=dev,tier=web
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ k apply -f 04-Replicatset-different-label.yml
+The ReplicaSet "different-label-testing" is invalid: spec.template.metadata.labels: Invalid value: {"type":"web"}: `selector` does not match template `labels`
+[kubeuser@medGPT manifest]$ vi 04-Replicatset-different-label.yml
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ cat 04-Replicatset-different-label.yml
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: different-label-testing
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      type: mult-container
+  template:
+    metadata:
+      labels:
+        type: mult-container
+    spec:
+      containers:
+        - name: webcontainer
+          image: nginx
+          ports:
+            - containerPort: 80
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ kubectl get pods --show-labels
+NAME                 READY   STATUS    RESTARTS   AGE   LABELS
+multi-conainer-pod   2/2     Running   0          18h   env=dev,type=mult-container
+replica-set1-54km5   1/1     Running   0          17h   app=demoapp
+replica-set1-jf9g5   1/1     Running   0          17h   app=demoapp
+web-pod              1/1     Running   0          18h   env=dev,tier=web
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ k apply -f 04-Replicatset-different-label.yml
+replicaset.apps/different-label-testing created
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ kubectl get pods --show-labels
+NAME                            READY   STATUS              RESTARTS   AGE   LABELS
+different-label-testing-5ms5n   1/1     Running             0          3s    type=mult-container
+different-label-testing-jprd5   0/1     ContainerCreating   0          3s    type=mult-container
+multi-conainer-pod              2/2     Running             0          18h   env=dev,type=mult-container
+replica-set1-54km5              1/1     Running             0          17h   app=demoapp
+replica-set1-jf9g5              1/1     Running             0          17h   app=demoapp
+web-pod                         1/1     Running             0          18h   env=dev,tier=web
+[kubeuser@medGPT manifest]$ k describe rs different-label-testing
+Name:         different-label-testing
+Namespace:    default
+Selector:     type=mult-container
+Labels:       <none>
+Annotations:  <none>
+Replicas:     3 current / 3 desired
+Pods Status:  3 Running / 0 Waiting / 0 Succeeded / 0 Failed
+Pod Template:
+  Labels:  type=mult-container
+  Containers:
+   webcontainer:
+    Image:         nginx
+    Port:          80/TCP
+    Host Port:     0/TCP
+    Environment:   <none>
+    Mounts:        <none>
+  Volumes:         <none>
+  Node-Selectors:  <none>
+  Tolerations:     <none>
+Events:
+  Type    Reason            Age   From                   Message
+  ----    ------            ----  ----                   -------
+  Normal  SuccessfulCreate  33s   replicaset-controller  Created pod: different-label-testing-5ms5n
+  Normal  SuccessfulCreate  33s   replicaset-controller  Created pod: different-label-testing-jprd5
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ kubectl get pods --show-labels
+NAME                            READY   STATUS    RESTARTS   AGE   LABELS
+different-label-testing-5ms5n   1/1     Running   0          51s   type=mult-container
+different-label-testing-jprd5   1/1     Running   0          51s   type=mult-container
+multi-conainer-pod              2/2     Running   0          18h   env=dev,type=mult-container
+replica-set1-54km5              1/1     Running   0          17h   app=demoapp
+replica-set1-jf9g5              1/1     Running   0          17h   app=demoapp
+web-pod                         1/1     Running   0          18h   env=dev,tier=web
+[kubeuser@medGPT manifest]$

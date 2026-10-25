@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: different-label-testing
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      type: mult-container
+  template:
+    metadata:
+      labels:
+        type: mult-container
+    spec:
+      containers:
+        - name: webcontainer
+          image: nginx
+          ports:
+            - containerPort: 80
