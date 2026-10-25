@@ -1,0 +1,163 @@
+[kubeuser@medGPT clusterIP]$ ll
+total 8
+-rw-rw-r-- 1 kubeuser kubeuser 175 Oct 25 10:51 web-clusterip.yml
+-rw-rw-r-- 1 kubeuser kubeuser 316 Oct 25 10:49 web-deployment.yml
+[kubeuser@medGPT clusterIP]$ cat web-deployment.yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eb-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web-demo
+  template:
+    metadata:
+      labels:
+        app: web-demo
+    spec:
+      containers:
+       - name: ngnx
+         image: nginx
+         ports:
+          - containerPort: 80
+[kubeuser@medGPT clusterIP]$ cat web-clusterip.yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+spec:
+  type: ClusterIP
+  selector:
+    app: web-demo
+  ports:
+   - port: 80
+     targetPort: 80
+     protocol: TCP
+[kubeuser@medGPT clusterIP]$
+[kubeuser@medGPT clusterIP]$ k get pods
+No resources found in default namespace.
+[kubeuser@medGPT clusterIP]$
+[kubeuser@medGPT clusterIP]$ k get svc
+NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   22h
+[kubeuser@medGPT clusterIP]$
+[kubeuser@medGPT clusterIP]$ k get deployments
+No resources found in default namespace.
+[kubeuser@medGPT clusterIP]$
+[kubeuser@medGPT clusterIP]$ kubectl apply -f web-deployment.yml
+deployment.apps/eb-deployment created
+[kubeuser@medGPT clusterIP]$
+[kubeuser@medGPT clusterIP]$ k get pods,svc,deployments
+NAME                                READY   STATUS    RESTARTS   AGE
+pod/eb-deployment-95b484884-8zmf4   1/1     Running   0          9s
+pod/eb-deployment-95b484884-wmxl6   1/1     Running   0          9s
+pod/eb-deployment-95b484884-wnx2d   1/1     Running   0          9s
+
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   22h
+
+NAME                            READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/eb-deployment   3/3     3            3           9s
+[kubeuser@medGPT clusterIP]$
+[kubeuser@medGPT clusterIP]$
+[kubeuser@medGPT clusterIP]$ kubectl apply -f web-clusterip.yml
+service/web-service created
+[kubeuser@medGPT clusterIP]$
+[kubeuser@medGPT clusterIP]$
+[kubeuser@medGPT clusterIP]$ k get pods,svc,deployments
+NAME                                READY   STATUS    RESTARTS   AGE
+pod/eb-deployment-95b484884-8zmf4   1/1     Running   0          29s
+pod/eb-deployment-95b484884-wmxl6   1/1     Running   0          29s
+pod/eb-deployment-95b484884-wnx2d   1/1     Running   0          29s
+
+NAME                  TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes    ClusterIP   10.96.0.1       <none>        443/TCP   22h
+service/web-service   ClusterIP   10.96.114.109   <none>        80/TCP    4s
+
+NAME                            READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/eb-deployment   3/3     3            3           29s
+[kubeuser@medGPT clusterIP]$
+[kubeuser@medGPT clusterIP]$
+[kubeuser@medGPT clusterIP]$
+[kubeuser@medGPT clusterIP]$ kubectl get pods -o wide
+NAME                            READY   STATUS    RESTARTS   AGE   IP            NODE       NOMINATED NODE   READINESS GATES
+eb-deployment-95b484884-8zmf4   1/1     Running   0          41s   10.244.0.36   minikube   <none>           <none>
+eb-deployment-95b484884-wmxl6   1/1     Running   0          41s   10.244.0.34   minikube   <none>           <none>
+eb-deployment-95b484884-wnx2d   1/1     Running   0          41s   10.244.0.35   minikube   <none>           <none>
+[kubeuser@medGPT clusterIP]$
+[kubeuser@medGPT clusterIP]$
+[kubeuser@medGPT clusterIP]$ kubectl get svc web-service
+NAME          TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+web-service   ClusterIP   10.96.114.109   <none>        80/TCP    22s
+[kubeuser@medGPT clusterIP]$
+[kubeuser@medGPT clusterIP]$
+[kubeuser@medGPT clusterIP]$ kubectl get endpointslice -l kubernetes.io/service-name=web-service
+NAME                ADDRESSTYPE   PORTS   ENDPOINTS                             AGE
+web-service-hjk9d   IPv4          80      10.244.0.34,10.244.0.36,10.244.0.35   33s
+[kubeuser@medGPT clusterIP]$ kubectl run test-client \
+>   --image=busybox:1.36 \
+>   --restart=Never \
+>   --rm -it \
+>   -- wget -qO- http://web-service
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+html { color-scheme: light dark; }
+body { width: 35em; margin: 0 auto;
+font-family: Tahoma, Verdana, Arial, sans-serif; }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, nginx is successfully installed and working.
+Further configuration is required for the web server, reverse proxy,
+API gateway, load balancer, content cache, or other features.</p>
+
+<p>For online documentation and support please refer to
+<a href="https://nginx.org/">nginx.org</a>.<br/>
+To engage with the community please visit
+<a href="https://community.nginx.org/">community.nginx.org</a>.<br/>
+For enterprise grade support, professional services, additional
+security features and capabilities please refer to
+<a href="https://f5.com/nginx">f5.com/nginx</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+All commands and output from this session will be recorded in container logs, including credentials and sensitive information passed through the command prompt.
+If you don't see a command prompt, try pressing enter.
+warning: couldn't attach to pod/test-client, falling back to streaming logs: unable to upgrade connection: container test-client not found in pod test-client_default
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+html { color-scheme: light dark; }
+body { width: 35em; margin: 0 auto;
+font-family: Tahoma, Verdana, Arial, sans-serif; }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, nginx is successfully installed and working.
+Further configuration is required for the web server, reverse proxy,
+API gateway, load balancer, content cache, or other features.</p>
+
+<p>For online documentation and support please refer to
+<a href="https://nginx.org/">nginx.org</a>.<br/>
+To engage with the community please visit
+<a href="https://community.nginx.org/">community.nginx.org</a>.<br/>
+For enterprise grade support, professional services, additional
+security features and capabilities please refer to
+<a href="https://f5.com/nginx">f5.com/nginx</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+pod "test-client" deleted from default namespace
+[kubeuser@medGPT clusterIP]$
+
