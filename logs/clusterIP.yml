@@ -161,3 +161,44 @@ security features and capabilities please refer to
 pod "test-client" deleted from default namespace
 [kubeuser@medGPT clusterIP]$
 
+=====================================================================
+NGINX Config updated with Host IP
+=====================================================================
+
+[kubeuser@medGPT clusterIP]$ kubectl run test-client \
+>   --image=busybox:1.36 \
+>   --restart=Never \
+>   --rm -it \
+>   -- wget -qO- http://web-service
+
+
+10.244.0.36
+pod "test-client" deleted from default namespace
+
+
+[kubeuser@medGPT clusterIP]$
+[kubeuser@medGPT clusterIP]$ kubectl run test-client \
+>   --image=busybox:1.36 \
+>   --restart=Never \
+>   --rm -it \
+>   -- wget -qO- http://web-service
+10.244.0.35
+pod "test-client" deleted from default namespace
+
+
+
+
+
+[kubeuser@medGPT clusterIP]$
+[kubeuser@medGPT clusterIP]$
+[kubeuser@medGPT clusterIP]$ kubectl run test-client \
+>   --image=busybox:1.36 \
+>   --restart=Never \
+>   --rm -it \
+>   -- wget -qO- http://web-service
+
+
+10.244.0.34
+pod "test-client" deleted from default namespace
+[kubeuser@medGPT clusterIP]$
+

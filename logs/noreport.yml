@@ -1,0 +1,92 @@
+[kubeuser@medGPT NodePort]$ cat deployment.yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+   name: nodeport-testing
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: np-test
+  template:
+    metadata:
+      labels:
+         app: np-test
+    spec:
+      containers:
+       - name: np-container
+         image: nginx
+         ports:
+          - containerPort: 80
+
+[kubeuser@medGPT NodePort]$
+[kubeuser@medGPT NodePort]$ cat nodeport-service.yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nodeport-service
+spec:
+  type: NodePort
+  selector:
+     app: np-test
+  ports:
+   - port: 80
+     targetPort: 80
+     nodePort: 30001
+     protocol: TCP
+
+[kubeuser@medGPT NodePort]$
+[kubeuser@medGPT NodePort]$ k get pods,deployments,svc
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   35h
+[kubeuser@medGPT NodePort]$
+[kubeuser@medGPT NodePort]$
+[kubeuser@medGPT NodePort]$ k apply -f deployment.yml
+deployment.apps/nodeport-testing created
+[kubeuser@medGPT NodePort]$
+[kubeuser@medGPT NodePort]$ k apply -f nodeport-service.yml
+service/nodeport-service created
+[kubeuser@medGPT NodePort]$
+[kubeuser@medGPT NodePort]$ k get pods,deployments,svc
+NAME                                    READY   STATUS    RESTARTS   AGE
+pod/nodeport-testing-69d5d65668-qfths   1/1     Running   0          17s
+pod/nodeport-testing-69d5d65668-rvpql   1/1     Running   0          17s
+
+NAME                               READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/nodeport-testing   2/2     2            2           17s
+
+NAME                       TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)        AGE
+service/kubernetes         ClusterIP   10.96.0.1     <none>        443/TCP        35h
+service/nodeport-service   NodePort    10.107.57.5   <none>        80:30001/TCP   10s
+[kubeuser@medGPT NodePort]$ minikube service nodeport-service --url
+http://192.168.49.2:30001
+[kubeuser@medGPT NodePort]$ curl http://192.168.49.2:30001
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+html { color-scheme: light dark; }
+body { width: 35em; margin: 0 auto;
+font-family: Tahoma, Verdana, Arial, sans-serif; }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, nginx is successfully installed and working.
+Further configuration is required for the web server, reverse proxy,
+API gateway, load balancer, content cache, or other features.</p>
+
+<p>For online documentation and support please refer to
+<a href="https://nginx.org/">nginx.org</a>.<br/>
+To engage with the community please visit
+<a href="https://community.nginx.org/">community.nginx.org</a>.<br/>
+For enterprise grade support, professional services, additional
+security features and capabilities please refer to
+<a href="https://f5.com/nginx">f5.com/nginx</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+[kubeuser@medGPT NodePort]$
+

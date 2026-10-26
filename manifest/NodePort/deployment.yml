@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+   name: nodeport-testing
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: np-test
+  template:
+    metadata:
+      labels:
+         app: np-test
+    spec:
+      containers:
+       - name: np-container
+         image: nginx
+         ports:
+          - containerPort: 80
+
