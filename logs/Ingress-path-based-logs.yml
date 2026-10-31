@@ -1,0 +1,99 @@
+[kubeuser@medGPT Ingress]$ k get all
+NAME                                   READY   STATUS    RESTARTS   AGE
+pod/api-deployment-5cc9cc78cf-swb8w    1/1     Running   0          53m
+pod/api-deployment-5cc9cc78cf-xhnqj    1/1     Running   0          53m
+pod/bank-deployment-6557ff5f4f-c9x7d   1/1     Running   0          58m
+pod/bank-deployment-6557ff5f4f-s59nk   1/1     Running   0          58m
+
+NAME                   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE
+service/api-service    ClusterIP   10.103.138.172   <none>        80/TCP    30m
+service/bank-service   ClusterIP   10.100.96.222    <none>        80/TCP    30m
+service/kubernetes     ClusterIP   10.96.0.1        <none>        443/TCP   6d14h
+
+NAME                              READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/api-deployment    2/2     2            2           53m
+deployment.apps/bank-deployment   2/2     2            2           58m
+
+NAME                                         DESIRED   CURRENT   READY   AGE
+replicaset.apps/api-deployment-5cc9cc78cf    2         2         2       53m
+replicaset.apps/bank-deployment-6557ff5f4f   2         2         2       58m
+
+
+[kubeuser@medGPT Ingress]$ ll
+total 24
+-rw-rw-r-- 1 kubeuser kubeuser 404 Oct 31 02:53 api-app.yml
+-rw-rw-r-- 1 kubeuser kubeuser 175 Oct 31 03:15 api-service-clusterIP.yml
+-rw-rw-r-- 1 kubeuser kubeuser 407 Oct 31 02:49 bank-app.yml
+-rw-rw-r-- 1 kubeuser kubeuser 177 Oct 31 03:14 bank-service-clusterIP.yml
+-rw-rw-r-- 1 kubeuser kubeuser 588 Oct 31 03:32 ingress-host-based.yml
+-rw-rw-r-- 1 kubeuser kubeuser 600 Oct 31 03:45 ingress-path-based.yml
+
+
+
+[kubeuser@medGPT Ingress]$ k apply -f ingress-path-based.yml
+ingress.networking.k8s.io/bank-ingress-path-based created
+[kubeuser@medGPT Ingress]$
+
+
+[kubeuser@medGPT Ingress]$ k get all
+NAME                                   READY   STATUS    RESTARTS   AGE
+pod/api-deployment-5cc9cc78cf-swb8w    1/1     Running   0          53m
+pod/api-deployment-5cc9cc78cf-xhnqj    1/1     Running   0          53m
+pod/bank-deployment-6557ff5f4f-c9x7d   1/1     Running   0          58m
+pod/bank-deployment-6557ff5f4f-s59nk   1/1     Running   0          58m
+
+NAME                   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE
+service/api-service    ClusterIP   10.103.138.172   <none>        80/TCP    30m
+service/bank-service   ClusterIP   10.100.96.222    <none>        80/TCP    30m
+service/kubernetes     ClusterIP   10.96.0.1        <none>        443/TCP   6d14h
+
+NAME                              READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/api-deployment    2/2     2            2           53m
+deployment.apps/bank-deployment   2/2     2            2           58m
+
+NAME                                         DESIRED   CURRENT   READY   AGE
+replicaset.apps/api-deployment-5cc9cc78cf    2         2         2       53m
+replicaset.apps/bank-deployment-6557ff5f4f   2         2         2       58m
+[kubeuser@medGPT Ingress]$ k get ingress
+NAME                      CLASS   HOSTS                              ADDRESS   PORTS   AGE
+bank-ingress-path-based   nginx   bank.example.com,api.example.com             80      14s
+
+
+[kubeuser@medGPT Ingress]$ kubectl describe ingress bank-ingress-path-based
+Name:             bank-ingress-path-based
+Labels:           <none>
+Namespace:        default
+Address:
+Ingress Class:    nginx
+Default backend:  <default>
+Rules:
+  Host              Path  Backends
+  ----              ----  --------
+  bank.example.com
+                    /   bank-service:80 (10.244.0.4:5678,10.244.0.5:5678)
+  api.example.com
+                    /   api-service:80 (10.244.0.7:5678,10.244.0.6:5678)
+Annotations:        <none>
+Events:
+  Type    Reason  Age   From                      Message
+  ----    ------  ----  ----                      -------
+  Normal  Sync    36s   nginx-ingress-controller  Scheduled for sync
+[kubeuser@medGPT Ingress]$
+
+
+
+[kubeuser@medGPT Ingress]$ IP=$(minikube ip)
+[kubeuser@medGPT Ingress]$ curl -H "Host: bank.example.com" http://$IP/
+Welcome to Bank Application
+[kubeuser@medGPT Ingress]$ curl -H "Host: bank.example.com" http://$IP/accounts
+Welcome to Bank Application
+[kubeuser@medGPT Ingress]$ curl -H "Host: bank.example.com" http://$IP/payments
+Welcome to Bank Application
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$ curl -H "Host: api.example.com" http://$IP/
+Welcome to Banking API
+[kubeuser@medGPT Ingress]$ curl -H "Host: api.example.com" http://$IP/transactions
+Welcome to Banking API
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$
+
