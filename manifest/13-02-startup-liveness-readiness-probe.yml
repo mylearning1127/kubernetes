@@ -1,0 +1,66 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bank-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: bank-app
+  template:
+    metadata:
+      labels:
+        app: bank-app
+    spec:
+      containers:
+        - name: bank-container
+          image: nginx:1.28
+
+          # Create health markers and simulate 40-second startup
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              touch /tmp/live-ok /tmp/ready-ok
+              (sleep 40; touch /tmp/startup-complete) &
+              exec nginx -g 'daemon off;'
+
+          startupProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - test -f /tmp/startup-complete
+            periodSeconds: 5
+            failureThreshold: 15
+
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - test -f /tmp/live-ok
+            periodSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - test -f /tmp/ready-ok
+            periodSeconds: 5
+            failureThreshold: 2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bank-service
+spec:
+  type: ClusterIP
+  selector:
+    app: bank-app
+  ports:
+    - port: 80
+      targetPort: 80
+

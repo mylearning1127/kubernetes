@@ -1,0 +1,567 @@
+[kubeuser@medGPT manifest]$ ll
+total 32
+-rw-rw-r-- 1 kubeuser kubeuser 182 Oct 24 13:41 01_pod_creation.yml
+-rw-rw-r-- 1 kubeuser kubeuser 290 Oct 24 13:55 02_multi_container_pod.yml
+-rw-rw-r-- 1 kubeuser kubeuser 325 Oct 24 15:10 03-Replica-set.yml
+-rw-rw-r-- 1 kubeuser kubeuser 353 Oct 25 08:18 04-Replicatset-different-label.yml
+-rw-rw-r-- 1 kubeuser kubeuser 420 Oct 25 08:51 05-deployment.yml
+-rw-rw-r-- 1 kubeuser kubeuser 225 Oct 25 09:29 06-container-restart-policy.yml
+drwxrwxr-x 7 kubeuser kubeuser 103 Oct 31 04:41 07-Service
+drwxrwxr-x 2 kubeuser kubeuser 197 Oct 31 03:52 08-Ingress
+drwxrwxr-x 2 kubeuser kubeuser 132 Oct 31 05:35 09-configmap
+drwxrwxr-x 2 kubeuser kubeuser 133 Oct 31 05:51 10-secrets
+drwxrwxr-x 2 kubeuser kubeuser 212 Oct 31 13:55 11-Storage
+-rw-rw-r-- 1 kubeuser kubeuser 924 Oct 31 14:06 12-staeful-sets.yml
+-rw-rw-r-- 1 kubeuser kubeuser 757 Oct 31 16:22 13-startup-liveness-readiness-probe.yml
+
+
+[kubeuser@medGPT manifest]$ cat 13-startup-liveness-readiness-probe.yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: startup-liveness-readiness-testing
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+       app: probe-testing
+  template:
+    metadata:
+      labels:
+         app: probe-testing
+    spec:
+     containers:
+     - name: web-container
+       image: nginx
+       ports:
+       - containerPort: 80
+
+       startupProbe:
+         httpGet:
+           path: /
+           port: 80
+         periodSeconds: 10
+         failureThreshold: 15
+
+       livenessProbe:
+         httpGet:
+           path: /
+           port: 80
+         periodSeconds: 10
+         failureThreshold: 3
+
+       readinessProbe:
+         httpGet:
+           path: /
+           port: 80
+         periodSeconds: 5
+         failureThreshold: 2
+
+
+         
+[kubeuser@medGPT manifest]$ k get all
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   7d3h
+[kubeuser@medGPT manifest]$
+
+
+[kubeuser@medGPT manifest]$ k apply -f 13-startup-liveness-readiness-probe.yml
+deployment.apps/startup-liveness-readiness-testing created
+[kubeuser@medGPT manifest]$
+
+
+[kubeuser@medGPT manifest]$ k get all
+NAME                                                      READY   STATUS              RESTARTS   AGE
+pod/startup-liveness-readiness-testing-7b9f759d8c-24nsb   0/1     Running             0          3s
+pod/startup-liveness-readiness-testing-7b9f759d8c-lkq4m   0/1     ContainerCreating   0          3s
+pod/startup-liveness-readiness-testing-7b9f759d8c-njm85   0/1     ContainerCreating   0          3s
+
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   7d3h
+
+NAME                                                 READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/startup-liveness-readiness-testing   0/3     3            0           3s
+
+NAME                                                            DESIRED   CURRENT   READY   AGE
+replicaset.apps/startup-liveness-readiness-testing-7b9f759d8c   3         3         0       3s
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$
+
+
+
+[kubeuser@medGPT manifest]$ k get all
+NAME                                                      READY   STATUS    RESTARTS   AGE
+pod/startup-liveness-readiness-testing-7b9f759d8c-24nsb   1/1     Running   0          21s
+pod/startup-liveness-readiness-testing-7b9f759d8c-lkq4m   1/1     Running   0          21s
+pod/startup-liveness-readiness-testing-7b9f759d8c-njm85   1/1     Running   0          21s
+
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   7d3h
+
+NAME                                                 READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/startup-liveness-readiness-testing   3/3     3            3           21s
+
+NAME                                                            DESIRED   CURRENT   READY   AGE
+replicaset.apps/startup-liveness-readiness-testing-7b9f759d8c   3         3         3       21s
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$
+
+
+
+
+[kubeuser@medGPT manifest]$ kubectl get pods -w
+NAME                                                  READY   STATUS    RESTARTS   AGE
+startup-liveness-readiness-testing-7b9f759d8c-24nsb   1/1     Running   0          32s
+startup-liveness-readiness-testing-7b9f759d8c-lkq4m   1/1     Running   0          32s
+startup-liveness-readiness-testing-7b9f759d8c-njm85   1/1     Running   0          32s
+^C[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$
+
+
+
+[kubeuser@medGPT manifest]$ kubectl describe pod startup-liveness-readiness-testing-7b9f759d8c-24nsb
+Name:             startup-liveness-readiness-testing-7b9f759d8c-24nsb
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             minikube/192.168.49.2
+Start Time:       Sat, 31 Oct 2026 16:24:31 -0400
+Labels:           app=probe-testing
+                  pod-template-hash=7b9f759d8c
+Annotations:      <none>
+Status:           Running
+IP:               10.244.0.23
+IPs:
+  IP:           10.244.0.23
+Controlled By:  ReplicaSet/startup-liveness-readiness-testing-7b9f759d8c
+Containers:
+  web-container:
+    Container ID:   containerd://32b81a11d50bc0efbf29b1f05a0d4898106a6d7b5a90b8c4d3dacf1dad8878ee
+    Image:          nginx
+    Image ID:       docker.io/library/nginx@sha256:5ab5b0b01097420873a3f3330f44248e34a3c2a3e8d5ee30658aeae8cb7435da
+    Port:           80/TCP
+    Host Port:      0/TCP
+    State:          Running
+      Started:      Sat, 31 Oct 2026 16:24:33 -0400
+    Ready:          True
+    Restart Count:  0
+    Liveness:       http-get http://:80/ delay=0s timeout=1s period=10s successThreshold=1 failureThreshold=3
+    Readiness:      http-get http://:80/ delay=0s timeout=1s period=5s successThreshold=1 failureThreshold=2
+    Startup:        http-get http://:80/ delay=0s timeout=1s period=10s successThreshold=1 failureThreshold=15
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-j5sk4 (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True
+  Initialized                 True
+  Ready                       True
+  ContainersReady             True
+  PodScheduled                True
+Volumes:
+  kube-api-access-j5sk4:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  52s   default-scheduler  Successfully assigned default/startup-liveness-readiness-testing-7b9f759d8c-24nsb to minikube
+  Normal  Pulling    51s   kubelet            spec.containers{web-container}: Pulling image "nginx"
+  Normal  Pulled     50s   kubelet            spec.containers{web-container}: Successfully pulled image "nginx" in 1.392s (1.393s including waiting). Image size: 63932917 bytes.
+  Normal  Created    50s   kubelet            spec.containers{web-container}: Container created
+  Normal  Started    50s   kubelet            spec.containers{web-container}: Container started
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ kubectl describe pod startup-liveness-readiness-testing-7b9f759d8c-lkq4m | grep -i -A5 probe
+Labels:           app=probe-testing
+                  pod-template-hash=7b9f759d8c
+Annotations:      <none>
+Status:           Running
+IP:               10.244.0.24
+IPs:
+[kubeuser@medGPT manifest]$ kubectl get endpointslices
+NAME         ADDRESSTYPE   PORTS   ENDPOINTS      AGE
+kubernetes   IPv4          8443    192.168.49.2   7d3h
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ kubectl get endpoints
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME         ENDPOINTS           AGE
+kubernetes   192.168.49.2:8443   7d3h
+[kubeuser@medGPT manifest]$
+
+
+
+
+
+[kubeuser@medGPT manifest]$ ll
+total 32
+-rw-rw-r-- 1 kubeuser kubeuser 182 Oct 24 13:41 01_pod_creation.yml
+-rw-rw-r-- 1 kubeuser kubeuser 290 Oct 24 13:55 02_multi_container_pod.yml
+-rw-rw-r-- 1 kubeuser kubeuser 325 Oct 24 15:10 03-Replica-set.yml
+-rw-rw-r-- 1 kubeuser kubeuser 353 Oct 25 08:18 04-Replicatset-different-label.yml
+-rw-rw-r-- 1 kubeuser kubeuser 420 Oct 25 08:51 05-deployment.yml
+-rw-rw-r-- 1 kubeuser kubeuser 225 Oct 25 09:29 06-container-restart-policy.yml
+drwxrwxr-x 7 kubeuser kubeuser 103 Oct 31 04:41 07-Service
+drwxrwxr-x 2 kubeuser kubeuser 197 Oct 31 03:52 08-Ingress
+drwxrwxr-x 2 kubeuser kubeuser 132 Oct 31 05:35 09-configmap
+drwxrwxr-x 2 kubeuser kubeuser 133 Oct 31 05:51 10-secrets
+drwxrwxr-x 2 kubeuser kubeuser 212 Oct 31 13:55 11-Storage
+-rw-rw-r-- 1 kubeuser kubeuser 924 Oct 31 14:06 12-staeful-sets.yml
+-rw-rw-r-- 1 kubeuser kubeuser 757 Oct 31 16:22 13-startup-liveness-readiness-probe.yml
+[kubeuser@medGPT manifest]$ vi 13-02-startup-liveness-readiness-probe.yml
+
+
+
+[kubeuser@medGPT manifest]$ cat 13-02-startup-liveness-readiness-probe.yml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bank-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: bank-app
+  template:
+    metadata:
+      labels:
+        app: bank-app
+    spec:
+      containers:
+        - name: bank-container
+          image: nginx:1.28
+
+          # Create health markers and simulate 40-second startup
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              touch /tmp/live-ok /tmp/ready-ok
+              (sleep 40; touch /tmp/startup-complete) &
+              exec nginx -g 'daemon off;'
+
+          startupProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - test -f /tmp/startup-complete
+            periodSeconds: 5
+            failureThreshold: 15
+
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - test -f /tmp/live-ok
+            periodSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - test -f /tmp/ready-ok
+            periodSeconds: 5
+            failureThreshold: 2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bank-service
+spec:
+  type: ClusterIP
+  selector:
+    app: bank-app
+  ports:
+    - port: 80
+      targetPort: 80
+
+[kubeuser@medGPT manifest]$ k apply -f 13-02-startup-liveness-readiness-probe.yml
+deployment.apps/bank-app created
+service/bank-service created
+
+
+[kubeuser@medGPT manifest]$ kubectl get pods -w
+NAME                                                  READY   STATUS              RESTARTS   AGE
+bank-app-57b4fb95f7-5t44l                             0/1     ContainerCreating   0          1s
+bank-app-57b4fb95f7-fgxxg                             0/1     ContainerCreating   0          1s
+bank-app-57b4fb95f7-vw8d5                             0/1     ContainerCreating   0          1s
+startup-liveness-readiness-testing-7b9f759d8c-24nsb   1/1     Running             0          5m47s
+startup-liveness-readiness-testing-7b9f759d8c-lkq4m   1/1     Running             0          5m47s
+startup-liveness-readiness-testing-7b9f759d8c-njm85   1/1     Running             0          5m47s
+bank-app-57b4fb95f7-vw8d5                             0/1     ContainerCreating   0          1s
+bank-app-57b4fb95f7-5t44l                             0/1     ContainerCreating   0          1s
+bank-app-57b4fb95f7-fgxxg                             0/1     ContainerCreating   0          1s
+bank-app-57b4fb95f7-vw8d5                             0/1     Running             0          2s
+bank-app-57b4fb95f7-5t44l                             0/1     Running             0          2s
+bank-app-57b4fb95f7-fgxxg                             0/1     Running             0          2s
+bank-app-57b4fb95f7-vw8d5                             0/1     Running             0          5s
+bank-app-57b4fb95f7-5t44l                             0/1     Running             0          5s
+bank-app-57b4fb95f7-fgxxg                             0/1     Running             0          5s
+
+
+[kubeuser@medGPT manifest]$ kubectl describe pod bank-app-57b4fb95f7-vw8d5
+Name:             bank-app-57b4fb95f7-vw8d5
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             minikube/192.168.49.2
+Start Time:       Sat, 31 Oct 2026 16:30:17 -0400
+Labels:           app=bank-app
+                  pod-template-hash=57b4fb95f7
+Annotations:      <none>
+Status:           Running
+IP:               10.244.0.26
+IPs:
+  IP:           10.244.0.26
+Controlled By:  ReplicaSet/bank-app-57b4fb95f7
+Containers:
+  bank-container:
+    Container ID:  containerd://16632f8ce5dc15c3d92322c6f3a38123f15b49c53d7d479bf4cb4192727f0a28
+    Image:         nginx:1.28
+    Image ID:      docker.io/library/nginx@sha256:146adea4768b83c607d0bdfa4188464e3da6e0a3ad4475db1d1d8f64f27c29cc
+    Port:          <none>
+    Host Port:     <none>
+    Command:
+      /bin/sh
+      -c
+    Args:
+      touch /tmp/live-ok /tmp/ready-ok
+      (sleep 40; touch /tmp/startup-complete) &
+      exec nginx -g 'daemon off;'
+
+    State:          Running
+      Started:      Sat, 31 Oct 2026 16:30:19 -0400
+    Ready:          False
+    Restart Count:  0
+    Liveness:       exec [sh -c test -f /tmp/live-ok] delay=0s timeout=1s period=5s successThreshold=1 failureThreshold=3
+    Readiness:      exec [sh -c test -f /tmp/ready-ok] delay=0s timeout=1s period=5s successThreshold=1 failureThreshold=2
+    Startup:        exec [sh -c test -f /tmp/startup-complete] delay=0s timeout=1s period=5s successThreshold=1 failureThreshold=15
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-cv4dn (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True
+  Initialized                 True
+  Ready                       False
+  ContainersReady             False
+  PodScheduled                True
+Volumes:
+  kube-api-access-cv4dn:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type     Reason     Age               From               Message
+  ----     ------     ----              ----               -------
+  Normal   Scheduled  30s               default-scheduler  Successfully assigned default/bank-app-57b4fb95f7-vw8d5 to minikube
+  Normal   Pulled     29s               kubelet            spec.containers{bank-container}: Container image "nginx:1.28" already present on machine and can be accessed by the pod
+  Normal   Created    29s               kubelet            spec.containers{bank-container}: Container created
+  Normal   Started    28s               kubelet            spec.containers{bank-container}: Container started
+  Warning  Unhealthy  5s (x5 over 24s)  kubelet            spec.containers{bank-container}: Startup probe failed:
+[kubeuser@medGPT manifest]$
+
+
+
+[kubeuser@medGPT manifest]$ kubectl exec bank-app-57b4fb95f7-fgxxg -- rm /tmp/ready-ok
+
+
+[kubeuser@medGPT manifest]$ kubectl get pods
+NAME                                                  READY   STATUS    RESTARTS   AGE
+bank-app-57b4fb95f7-5t44l                             1/1     Running   0          105s
+bank-app-57b4fb95f7-fgxxg                             1/1     Running   0          105s
+bank-app-57b4fb95f7-vw8d5                             1/1     Running   0          105s
+startup-liveness-readiness-testing-7b9f759d8c-24nsb   1/1     Running   0          7m31s
+startup-liveness-readiness-testing-7b9f759d8c-lkq4m   1/1     Running   0          7m31s
+startup-liveness-readiness-testing-7b9f759d8c-njm85   1/1     Running   0          7m31s
+
+
+[kubeuser@medGPT manifest]$ kubectl get pods
+NAME                                                  READY   STATUS    RESTARTS   AGE
+bank-app-57b4fb95f7-5t44l                             1/1     Running   0          113s
+bank-app-57b4fb95f7-fgxxg                             0/1     Running   0          113s
+bank-app-57b4fb95f7-vw8d5                             1/1     Running   0          113s
+startup-liveness-readiness-testing-7b9f759d8c-24nsb   1/1     Running   0          7m39s
+startup-liveness-readiness-testing-7b9f759d8c-lkq4m   1/1     Running   0          7m39s
+startup-liveness-readiness-testing-7b9f759d8c-njm85   1/1     Running   0          7m39s
+
+
+[kubeuser@medGPT manifest]$ kubectl get pods -w
+NAME                                                  READY   STATUS    RESTARTS   AGE
+bank-app-57b4fb95f7-5t44l                             1/1     Running   0          117s
+bank-app-57b4fb95f7-fgxxg                             0/1     Running   0          117s
+bank-app-57b4fb95f7-vw8d5                             1/1     Running   0          117s
+startup-liveness-readiness-testing-7b9f759d8c-24nsb   1/1     Running   0          7m43s
+startup-liveness-readiness-testing-7b9f759d8c-lkq4m   1/1     Running   0          7m43s
+startup-liveness-readiness-testing-7b9f759d8c-njm85   1/1     Running   0          7m43s
+^C[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$
+
+
+[kubeuser@medGPT manifest]$ kubectl get endpoints bank-service
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME           ENDPOINTS                       AGE
+bank-service   10.244.0.26:80,10.244.0.28:80   2m22s
+
+
+
+[kubeuser@medGPT manifest]$ kubectl get pods -w -o wide
+NAME                                                  READY   STATUS    RESTARTS   AGE     IP            NODE       NOMINATED NODE   READINESS GATES
+bank-app-57b4fb95f7-5t44l                             1/1     Running   0          2m31s   10.244.0.28   minikube   <none>           <none>
+bank-app-57b4fb95f7-fgxxg                             0/1     Running   0          2m31s   10.244.0.27   minikube   <none>           <none>
+bank-app-57b4fb95f7-vw8d5                             1/1     Running   0          2m31s   10.244.0.26   minikube   <none>           <none>
+startup-liveness-readiness-testing-7b9f759d8c-24nsb   1/1     Running   0          8m17s   10.244.0.23   minikube   <none>           <none>
+startup-liveness-readiness-testing-7b9f759d8c-lkq4m   1/1     Running   0          8m17s   10.244.0.24   minikube   <none>           <none>
+startup-liveness-readiness-testing-7b9f759d8c-njm85   1/1     Running   0          8m17s   10.244.0.25   minikube   <none>           <none>
+^C[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$
+
+
+
+[kubeuser@medGPT manifest]$ kubectl exec bank-app-57b4fb95f7-fgxxg -- touch /tmp/ready-ok
+
+
+
+[kubeuser@medGPT manifest]$ kubectl get pods -w -o wide
+NAME                                                  READY   STATUS    RESTARTS   AGE     IP            NODE       NOMINATED NODE   READINESS GATES
+bank-app-57b4fb95f7-5t44l                             1/1     Running   0          3m8s    10.244.0.28   minikube   <none>           <none>
+bank-app-57b4fb95f7-fgxxg                             1/1     Running   0          3m8s    10.244.0.27   minikube   <none>           <none>
+bank-app-57b4fb95f7-vw8d5                             1/1     Running   0          3m8s    10.244.0.26   minikube   <none>           <none>
+startup-liveness-readiness-testing-7b9f759d8c-24nsb   1/1     Running   0          8m54s   10.244.0.23   minikube   <none>           <none>
+startup-liveness-readiness-testing-7b9f759d8c-lkq4m   1/1     Running   0          8m54s   10.244.0.24   minikube   <none>           <none>
+startup-liveness-readiness-testing-7b9f759d8c-njm85   1/1     Running   0          8m54s   10.244.0.25   minikube   <none>           <none>
+^C[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$
+
+
+[kubeuser@medGPT manifest]$ kubectl get endpoints bank-service
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME           ENDPOINTS                                      AGE
+bank-service   10.244.0.26:80,10.244.0.27:80,10.244.0.28:80   3m16s
+
+
+
+
+[kubeuser@medGPT manifest]$ kubectl exec bank-app-57b4fb95f7-fgxxg -- rm /tmp/live-ok
+
+
+[kubeuser@medGPT manifest]$ kubectl get pods -w -o wide
+NAME                                                  READY   STATUS    RESTARTS   AGE     IP            NODE       NOMINATED NODE   READINESS GATES
+bank-app-57b4fb95f7-5t44l                             1/1     Running   0          3m39s   10.244.0.28   minikube   <none>           <none>
+bank-app-57b4fb95f7-fgxxg                             1/1     Running   0          3m39s   10.244.0.27   minikube   <none>           <none>
+bank-app-57b4fb95f7-vw8d5                             1/1     Running   0          3m39s   10.244.0.26   minikube   <none>           <none>
+startup-liveness-readiness-testing-7b9f759d8c-24nsb   1/1     Running   0          9m25s   10.244.0.23   minikube   <none>           <none>
+startup-liveness-readiness-testing-7b9f759d8c-lkq4m   1/1     Running   0          9m25s   10.244.0.24   minikube   <none>           <none>
+startup-liveness-readiness-testing-7b9f759d8c-njm85   1/1     Running   0          9m25s   10.244.0.25   minikube   <none>           <none>
+bank-app-57b4fb95f7-fgxxg                             0/1     Running   1 (0s ago)   3m51s   10.244.0.27   minikube   <none>           <none>
+bank-app-57b4fb95f7-fgxxg                             1/1     Running   1 (0s ago)   3m51s   10.244.0.27   minikube   <none>           <none>
+bank-app-57b4fb95f7-fgxxg                             0/1     Running   1 (4s ago)   3m55s   10.244.0.27   minikube   <none>           <none>
+^C[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$
+
+
+[kubeuser@medGPT manifest]$ kubectl describe pod bank-app-57b4fb95f7-fgxxg
+Name:             bank-app-57b4fb95f7-fgxxg
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             minikube/192.168.49.2
+Start Time:       Sat, 31 Oct 2026 16:30:17 -0400
+Labels:           app=bank-app
+                  pod-template-hash=57b4fb95f7
+Annotations:      <none>
+Status:           Running
+IP:               10.244.0.27
+IPs:
+  IP:           10.244.0.27
+Controlled By:  ReplicaSet/bank-app-57b4fb95f7
+Containers:
+  bank-container:
+    Container ID:  containerd://62c13c07128d1e25f6d0e2c4dd233a7e41bbf3941e280cdfe735ad36f87489fb
+    Image:         nginx:1.28
+    Image ID:      docker.io/library/nginx@sha256:146adea4768b83c607d0bdfa4188464e3da6e0a3ad4475db1d1d8f64f27c29cc
+    Port:          <none>
+    Host Port:     <none>
+    Command:
+      /bin/sh
+      -c
+    Args:
+      touch /tmp/live-ok /tmp/ready-ok
+      (sleep 40; touch /tmp/startup-complete) &
+      exec nginx -g 'daemon off;'
+
+    State:          Running
+      Started:      Sat, 31 Oct 2026 16:34:08 -0400
+    Last State:     Terminated
+      Reason:       Completed
+      Exit Code:    0
+      Started:      Sat, 31 Oct 2026 16:30:19 -0400
+      Finished:     Sat, 31 Oct 2026 16:34:08 -0400
+    Ready:          False
+    Restart Count:  1
+    Liveness:       exec [sh -c test -f /tmp/live-ok] delay=0s timeout=1s period=5s successThreshold=1 failureThreshold=3
+    Readiness:      exec [sh -c test -f /tmp/ready-ok] delay=0s timeout=1s period=5s successThreshold=1 failureThreshold=2
+    Startup:        exec [sh -c test -f /tmp/startup-complete] delay=0s timeout=1s period=5s successThreshold=1 failureThreshold=15
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-zbpml (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True
+  Initialized                 True
+  Ready                       False
+  ContainersReady             False
+  PodScheduled                True
+Volumes:
+  kube-api-access-zbpml:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type     Reason     Age                    From               Message
+  ----     ------     ----                   ----               -------
+  Normal   Scheduled  4m32s                  default-scheduler  Successfully assigned default/bank-app-57b4fb95f7-fgxxg to minikube
+  Warning  Unhealthy  3m52s (x8 over 4m26s)  kubelet            spec.containers{bank-container}: Startup probe failed:
+  Warning  Unhealthy  91s (x17 over 2m46s)   kubelet            spec.containers{bank-container}: Readiness probe failed:
+  Normal   Killing    42s                    kubelet            spec.containers{bank-container}: Container bank-container failed liveness probe, will be restarted
+  Normal   Pulled     41s (x2 over 4m31s)    kubelet            spec.containers{bank-container}: Container image "nginx:1.28" already present on machine and can be accessed by the pod
+  Normal   Created    41s (x2 over 4m31s)    kubelet            spec.containers{bank-container}: Container created
+  Normal   Started    41s (x2 over 4m30s)    kubelet            spec.containers{bank-container}: Container started
+[kubeuser@medGPT manifest]$
+
+
+
+[kubeuser@medGPT manifest]$ kubectl get pods -w -o wide
+NAME                                                  READY   STATUS    RESTARTS      AGE     IP            NODE       NOMINATED NODE   READINESS GATES
+bank-app-57b4fb95f7-5t44l                             1/1     Running   0             4m46s   10.244.0.28   minikube   <none>           <none>
+bank-app-57b4fb95f7-fgxxg                             1/1     Running   1 (55s ago)   4m46s   10.244.0.27   minikube   <none>           <none>
+bank-app-57b4fb95f7-vw8d5                             1/1     Running   0             4m46s   10.244.0.26   minikube   <none>           <none>
+startup-liveness-readiness-testing-7b9f759d8c-24nsb   1/1     Running   0             10m     10.244.0.23   minikube   <none>           <none>
+startup-liveness-readiness-testing-7b9f759d8c-lkq4m   1/1     Running   0             10m     10.244.0.24   minikube   <none>           <none>
+startup-liveness-readiness-testing-7b9f759d8c-njm85   1/1     Running   0             10m     10.244.0.25   minikube   <none>           <none>
+[kubeuser@medGPT manifest]$
+
