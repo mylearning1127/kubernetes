@@ -1,0 +1,95 @@
+
+[kubeuser@medGPT 11-Storage]$ cat volume-empty-dir.yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: volume-testing
+spec:
+  containers:
+   - name: web-container
+     image: nginx
+     volumeMounts:
+       - name: emtydir-functionality
+         mountPath: /usr/share/nginx/html
+  volumes:
+   - name: emtydir-functionality
+     emptyDir: {}
+[kubeuser@medGPT 11-Storage]$
+
+
+
+[kubeuser@medGPT 11-Storage]$ k get pods
+No resources found in default namespace.
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ k apply -f volume-empty-dir.yml
+pod/volume-testing created
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ k get pods
+NAME             READY   STATUS    RESTARTS   AGE
+volume-testing   1/1     Running   0          2s
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ k describe pods volume-testing
+Name:             volume-testing
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             minikube/192.168.49.2
+Start Time:       Sat, 31 Oct 2026 09:52:35 -0400
+Labels:           <none>
+Annotations:      <none>
+Status:           Running
+IP:               10.244.0.14
+IPs:
+  IP:  10.244.0.14
+Containers:
+  web-container:
+    Container ID:   containerd://62416bbd95ee6c2aafab6b47bf9e50a5a1d375b565dec18010e35d03086b256e
+    Image:          nginx
+    Image ID:       docker.io/library/nginx@sha256:5ab5b0b01097420873a3f3330f44248e34a3c2a3e8d5ee30658aeae8cb7435da
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Sat, 31 Oct 2026 09:52:37 -0400
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /usr/share/nginx/html from emtydir-functionality (rw)
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-9j9jr (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True
+  Initialized                 True
+  Ready                       True
+  ContainersReady             True
+  PodScheduled                True
+Volumes:
+  emtydir-functionality:
+    Type:       EmptyDir (a temporary directory that shares a pod's lifetime)
+    Medium:
+    SizeLimit:  <unset>
+  kube-api-access-9j9jr:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  24s   default-scheduler  Successfully assigned default/volume-testing to minikube
+  Normal  Pulling    23s   kubelet            spec.containers{web-container}: Pulling image "nginx"
+  Normal  Pulled     22s   kubelet            spec.containers{web-container}: Successfully pulled image "nginx" in 1.345s (1.345s including waiting). Image size: 63932917 bytes.
+  Normal  Created    22s   kubelet            spec.containers{web-container}: Container created
+  Normal  Started    22s   kubelet            spec.containers{web-container}: Container started
+[kubeuser@medGPT 11-Storage]$

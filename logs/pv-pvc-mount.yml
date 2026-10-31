@@ -1,0 +1,103 @@
+============================================================================================================================
+PV CREATION
+
+Important: PVC and PV binding is normally one-to-one. One PV cannot be independently bound to multiple PVCs at the same time.
+============================================================================================================================
+
+[kubeuser@medGPT 11-Storage]$ cat 02-pv-create.yml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-web
+spec:
+ capacity:
+   storage: 2Mi
+ accessModes:
+   - ReadWriteOnce
+ persistentVolumeReclaimPolicy: Retain
+ hostPath:
+  path: /mnt/data/app1
+  type: DirectoryOrCreate
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ k get pv
+No resources found
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ k apply -f 02-pv-create.yml
+persistentvolume/pv-web created
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ k get pv
+NAME     CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS      CLAIM   STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE
+pv-web   2Mi        RWO            Retain           Available                          <unset>                          2s
+[kubeuser@medGPT 11-Storage]$
+
+============================================================
+PVC CREATION
+===========================================================
+
+[kubeuser@medGPT 11-Storage]$ k get pv
+NAME     CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS      CLAIM   STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE
+web-pv   2Mi        RWO            Retain           Available                          <unset>                          10s
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ k describe pv web-pv
+Name:            web-pv
+Labels:          <none>
+Annotations:     <none>
+Finalizers:      [kubernetes.io/pv-protection]
+StorageClass:
+Status:          Available
+Claim:
+Reclaim Policy:  Retain
+Access Modes:    RWO
+VolumeMode:      Filesystem
+Capacity:        2Mi
+Node Affinity:   <none>
+Message:
+Source:
+    Type:          HostPath (bare host directory volume)
+    Path:          /mnt/data/app1
+    HostPathType:  DirectoryOrCreate
+Events:            <none>
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ cat 03-pvc-create.yml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: web-pvc
+spec:
+  storageClassName: ""
+  accessModes:
+    - ReadWriteOnce
+
+  resources:
+    requests:
+      storage: 2Mi
+
+  volumeName: web-pv
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ k apply -f 03-pvc-create.yml
+persistentvolumeclaim/web-pvc created
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ k get pvc
+NAME      STATUS   VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+web-pvc   Bound    web-pv   2Mi        RWO                           <unset>                 18s
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ k get pv
+NAME     CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM             STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE
+web-pv   2Mi        RWO            Retain           Bound    default/web-pvc                  <unset>                          77s
+[kubeuser@medGPT 11-Storage]$
