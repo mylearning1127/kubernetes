@@ -101,3 +101,224 @@ web-pvc   Bound    web-pv   2Mi        RWO                           <unset>    
 NAME     CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM             STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE
 web-pv   2Mi        RWO            Retain           Bound    default/web-pvc                  <unset>                          77s
 [kubeuser@medGPT 11-Storage]$
+
+============================================================================================================================
+Attaching PVC with POD
+============================================================================================================================
+
+[kubeuser@medGPT 11-Storage]$ k get pv
+NAME     CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM             STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE
+web-pv   2Mi        RWO            Retain           Bound    default/web-pvc                  <unset>                          44m
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ k get pvc
+NAME      STATUS   VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+web-pvc   Bound    web-pv   2Mi        RWO                           <unset>                 43m
+[kubeuser@medGPT 11-Storage]$
+
+[kubeuser@medGPT 11-Storage]$ k get pods
+No resources found in default namespace.
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ cat 04-pod-with-pvc.yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-with-pvc
+spec:
+ containers:
+  - name: container1
+    image: nginx
+    volumeMounts:
+    - name: pvc-1
+      path: /flink
+ volumes:
+  - name: pvc-1
+    persistentVolumeClaim:
+      claimName: web-pvc
+[kubeuser@medGPT 11-Storage]$
+
+[kubeuser@medGPT 11-Storage]$ k apply -f 04-pod-with-pvc.yml
+pod/pod-with-pvc created
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ k get pods
+NAME           READY   STATUS    RESTARTS   AGE
+pod-with-pvc   1/1     Running   0          3s
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ k get pvc
+NAME      STATUS   VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+web-pvc   Bound    web-pv   2Mi        RWO                           <unset>                 44m
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ k describe pod pod-with-pvc
+Name:             pod-with-pvc
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             minikube/192.168.49.2
+Start Time:       Sat, 31 Oct 2026 13:28:36 -0400
+Labels:           <none>
+Annotations:      <none>
+Status:           Running
+IP:               10.244.0.15
+IPs:
+  IP:  10.244.0.15
+Containers:
+  container1:
+    Container ID:   containerd://05585ba0b6ef701ea3d37826062279079542cc75db43258cd8f9d52255e8ce09
+    Image:          nginx
+    Image ID:       docker.io/library/nginx@sha256:5ab5b0b01097420873a3f3330f44248e34a3c2a3e8d5ee30658aeae8cb7435da
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Sat, 31 Oct 2026 13:28:38 -0400
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /flink from pvc-1 (rw)
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-xl5nk (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True
+  Initialized                 True
+  Ready                       True
+  ContainersReady             True
+  PodScheduled                True
+Volumes:
+  pvc-1:
+    Type:       PersistentVolumeClaim (a reference to a PersistentVolumeClaim in the same namespace)
+    ClaimName:  web-pvc
+    ReadOnly:   false
+  kube-api-access-xl5nk:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  26s   default-scheduler  Successfully assigned default/pod-with-pvc to minikube
+  Normal  Pulling    26s   kubelet            spec.containers{container1}: Pulling image "nginx"
+  Normal  Pulled     25s   kubelet            spec.containers{container1}: Successfully pulled image "nginx" in 1.301s (1.301s including waiting). Image size: 63932917 bytes.
+  Normal  Created    25s   kubelet            spec.containers{container1}: Container created
+  Normal  Started    24s   kubelet            spec.containers{container1}: Container started
+[kubeuser@medGPT 11-Storage]$
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ k get pv
+NAME     CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM             STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE
+web-pv   2Mi        RWO            Retain           Bound    default/web-pvc                  <unset>                          46m
+
+
+[kubeuser@medGPT 11-Storage]$ k describe pvc web-pvc
+Name:          web-pvc
+Namespace:     default
+StorageClass:
+Status:        Bound
+Volume:        web-pv
+Labels:        <none>
+Annotations:   pv.kubernetes.io/bind-completed: yes
+Finalizers:    [kubernetes.io/pvc-protection]
+Capacity:      2Mi
+Access Modes:  RWO
+VolumeMode:    Filesystem
+Used By:       pod-with-pvc
+Conditions:
+  Type     Status  LastProbeTime                     LastTransitionTime                Reason        Message
+  ----     ------  -----------------                 ------------------                ------        -------
+  Unused   False   Mon, 01 Jan 0001 00:00:00 +0000   Sat, 31 Oct 2026 13:28:36 -0400   PodUsingPVC   A pod is currently referencing this PVC
+Events:    <none>
+[kubeuser@medGPT 11-Storage]$
+
+[kubeuser@medGPT 11-Storage]$ k exec pod-with-pvc -- sh -c 'echo "Bank customer transaction data" > /flink/customer.txt'
+[kubeuser@medGPT 11-Storage]$
+
+====================================================================================================
+POD deleted & recreted with yml. Validate the file available from PVC
+====================================================================================================
+
+[kubeuser@medGPT 11-Storage]$ k get pods
+NAME           READY   STATUS    RESTARTS   AGE
+pod-with-pvc   1/1     Running   0          10m
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ kubectl exec pod-with-pvc -- cat /flink/customer.txt
+Bank customer transaction data
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ k delete pod  pod-with-pvc
+pod "pod-with-pvc" deleted from default namespace
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ k get pvc
+NAME      STATUS   VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+web-pvc   Bound    web-pv   2Mi        RWO                           <unset>                 55m
+
+
+[kubeuser@medGPT 11-Storage]$ k describe  pvc web-pvc
+Name:          web-pvc
+Namespace:     default
+StorageClass:
+Status:        Bound
+Volume:        web-pv
+Labels:        <none>
+Annotations:   pv.kubernetes.io/bind-completed: yes
+Finalizers:    [kubernetes.io/pvc-protection]
+Capacity:      2Mi
+Access Modes:  RWO
+VolumeMode:    Filesystem
+Used By:       <none>
+Conditions:
+  Type     Status  LastProbeTime                     LastTransitionTime                Reason           Message
+  ----     ------  -----------------                 ------------------                ------           -------
+  Unused   True    Mon, 01 Jan 0001 00:00:00 +0000   Sat, 31 Oct 2026 13:39:26 -0400   NoPodsUsingPVC   No pods are currently referencing this PVC
+Events:    <none>
+
+
+[kubeuser@medGPT 11-Storage]$ k apply -f 04-pod-with-pvc.yml
+pod/pod-with-pvc created
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ k describe  pvc web-pvc
+Name:          web-pvc
+Namespace:     default
+StorageClass:
+Status:        Bound
+Volume:        web-pv
+Labels:        <none>
+Annotations:   pv.kubernetes.io/bind-completed: yes
+Finalizers:    [kubernetes.io/pvc-protection]
+Capacity:      2Mi
+Access Modes:  RWO
+VolumeMode:    Filesystem
+Used By:       pod-with-pvc
+Conditions:
+  Type     Status  LastProbeTime                     LastTransitionTime                Reason        Message
+  ----     ------  -----------------                 ------------------                ------        -------
+  Unused   False   Mon, 01 Jan 0001 00:00:00 +0000   Sat, 31 Oct 2026 13:40:13 -0400   PodUsingPVC   A pod is currently referencing this PVC
+Events:    <none>
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ kubectl exec pod-with-pvc -- cat /flink/customer.txt
+Bank customer transaction data
+[kubeuser@medGPT 11-Storage]$
+

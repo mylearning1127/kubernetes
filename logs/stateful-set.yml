@@ -1,0 +1,115 @@
+[kubeuser@medGPT manifest]$ ll
+total 28
+-rw-rw-r-- 1 kubeuser kubeuser 182 Oct 24 13:41 01_pod_creation.yml
+-rw-rw-r-- 1 kubeuser kubeuser 290 Oct 24 13:55 02_multi_container_pod.yml
+-rw-rw-r-- 1 kubeuser kubeuser 325 Oct 24 15:10 03-Replica-set.yml
+-rw-rw-r-- 1 kubeuser kubeuser 353 Oct 25 08:18 04-Replicatset-different-label.yml
+-rw-rw-r-- 1 kubeuser kubeuser 420 Oct 25 08:51 05-deployment.yml
+-rw-rw-r-- 1 kubeuser kubeuser 225 Oct 25 09:29 06-container-restart-policy.yml
+drwxrwxr-x 7 kubeuser kubeuser 103 Oct 31 04:41 07-Service
+drwxrwxr-x 2 kubeuser kubeuser 197 Oct 31 03:52 08-Ingress
+drwxrwxr-x 2 kubeuser kubeuser 132 Oct 31 05:35 09-configmap
+drwxrwxr-x 2 kubeuser kubeuser 133 Oct 31 05:51 10-secrets
+drwxrwxr-x 2 kubeuser kubeuser 212 Oct 31 13:55 11-Storage
+-rw-rw-r-- 1 kubeuser kubeuser 924 Oct 31 14:06 12-staeful-sets.yml
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ cat 12-staeful-sets.yml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-headless
+spec:
+  clusterIP: None
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+spec:
+  serviceName: postgres-headless
+  replicas: 2
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          env:
+            - name: POSTGRES_PASSWORD
+              value: LabPassword123
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 2Gi
+
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ k get all
+NAME             READY   STATUS        RESTARTS   AGE
+pod/postgres-0   1/1     Terminating   0          32s
+
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   7d1h
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ k apply -f 12-staeful-sets.yml
+service/postgres-headless created
+statefulset.apps/postgres created
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$
+[kubeuser@medGPT manifest]$ k get all
+NAME             READY   STATUS        RESTARTS   AGE
+pod/postgres-0   1/1     Terminating   0          40s
+
+NAME                        TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)    AGE
+service/kubernetes          ClusterIP   10.96.0.1    <none>        443/TCP    7d1h
+service/postgres-headless   ClusterIP   None         <none>        5432/TCP   3s
+
+NAME                        READY   AGE
+statefulset.apps/postgres   0/2     3s
+[kubeuser@medGPT manifest]$ k get all
+NAME             READY   STATUS        RESTARTS   AGE
+pod/postgres-0   1/1     Terminating   0          51s
+
+NAME                        TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)    AGE
+service/kubernetes          ClusterIP   10.96.0.1    <none>        443/TCP    7d1h
+service/postgres-headless   ClusterIP   None         <none>        5432/TCP   14s
+
+NAME                        READY   AGE
+statefulset.apps/postgres   0/2     14s
+[kubeuser@medGPT manifest]$
+
+
+[kubeuser@medGPT manifest]$ k get all
+NAME             READY   STATUS    RESTARTS   AGE
+pod/postgres-0   1/1     Running   0          27s
+pod/postgres-1   1/1     Running   0          27s
+
+NAME                        TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)    AGE
+service/kubernetes          ClusterIP   10.96.0.1    <none>        443/TCP    7d1h
+service/postgres-headless   ClusterIP   None         <none>        5432/TCP   48s
+
+NAME                        READY   AGE
+statefulset.apps/postgres   2/2     48s
+[kubeuser@medGPT manifest]$
+

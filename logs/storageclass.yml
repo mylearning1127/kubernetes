@@ -1,0 +1,98 @@
+==========================================================================
+Storageclass creation:
+   1. StorageClass allows to multiple PVC single SC instead of multiple PV
+   2. SC will create PV when PVC creation using StorageClass
+==========================================================================
+[kubeuser@medGPT 11-Storage]$ kubectl get storageclass
+NAME                 PROVISIONER                RECLAIMPOLICY   VOLUMEBINDINGMODE   ALLOWVOLUMEEXPANSION   AGE
+standard (default)   k8s.io/minikube-hostpath   Delete          Immediate           false                  7d
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ vi 05-storageclass.yml
+[kubeuser@medGPT 11-Storage]$
+
+[kubeuser@medGPT 11-Storage]$ k apply -f 05-storageclass.yml
+storageclass.storage.k8s.io/bank-storage created
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ kubectl get storageclass
+NAME                 PROVISIONER                RECLAIMPOLICY   VOLUMEBINDINGMODE   ALLOWVOLUMEEXPANSION   AGE
+bank-storage         k8s.io/minikube-hostpath   Retain          Immediate           false                  3s
+standard (default)   k8s.io/minikube-hostpath   Delete          Immediate           false                  7d1h
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ kubectl describe sc bank-storage
+Name:            bank-storage
+IsDefaultClass:  No
+Annotations:     kubectl.kubernetes.io/last-applied-configuration={"apiVersion":"storage.k8s.io/v1","kind":"StorageClass","metadata":{"annotations":{},"name":"bank-storage"},"provisioner":"k8s.io/minikube-hostpath","reclaimPolicy":"Retain","volumeBindingMode":"Immediate"}
+
+Provisioner:           k8s.io/minikube-hostpath
+Parameters:            <none>
+AllowVolumeExpansion:  <unset>
+MountOptions:          <none>
+ReclaimPolicy:         Retain
+VolumeBindingMode:     Immediate
+Events:                <none>
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ vi 06-pvc-from-storageclass.yml
+
+
+[kubeuser@medGPT 11-Storage]$ k get pvc
+No resources found in default namespace.
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ k apply -f 06-pvc-from-storageclass.yml
+persistentvolumeclaim/bank-pvc created
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ k get pvc
+NAME       STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+bank-pvc   Bound    pvc-d167e857-e9a2-4e35-b9d6-f5da0004e0ab   2Gi        RWO            bank-storage   <unset>                 4s
+
+
+[kubeuser@medGPT 11-Storage]$ cp 06-pvc-from-storageclass.yml 07-pvc-from-storageclass.yml
+[kubeuser@medGPT 11-Storage]$ vi 07-pvc-from-storageclass.yml
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ cat 02-pv-create.yml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: web-pv
+spec:
+ capacity:
+   storage: 2Mi
+ accessModes:
+   - ReadWriteOnce
+ persistentVolumeReclaimPolicy: Retain
+ hostPath:
+  path: /mnt/data/app1
+  type: DirectoryOrCreate
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ k apply -f 07-pvc-from-storageclass.yml
+persistentvolumeclaim/bank-pvc-2 created
+[kubeuser@medGPT 11-Storage]$
+
+
+[kubeuser@medGPT 11-Storage]$ k get pvc
+NAME         STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+bank-pvc     Bound    pvc-d167e857-e9a2-4e35-b9d6-f5da0004e0ab   2Gi        RWO            bank-storage   <unset>                 50s
+bank-pvc-2   Bound    pvc-66e047bd-66c3-4ab3-96d8-84cf5c76a990   2Gi        RWO            bank-storage   <unset>                 4s
+
+
+[kubeuser@medGPT 11-Storage]$ k get pv
+NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE
+pvc-66e047bd-66c3-4ab3-96d8-84cf5c76a990   2Gi        RWO            Retain           Bound    default/bank-pvc-2   bank-storage   <unset>                          27s
+pvc-d167e857-e9a2-4e35-b9d6-f5da0004e0ab   2Gi        RWO            Retain           Bound    default/bank-pvc     bank-storage   <unset>                          73s
+[kubeuser@medGPT 11-Storage]$
+[kubeuser@medGPT 11-Storage]$
