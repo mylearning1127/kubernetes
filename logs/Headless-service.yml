@@ -1,0 +1,39 @@
+[kubeuser@medGPT Headless-service]$ cat Headless-service.yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-headless
+spec:
+  clusterIP: None
+  selector:
+    app: web-demo
+  ports:
+    - port: 80
+      targetPort: 80
+[kubeuser@medGPT Headless-service]$
+[kubeuser@medGPT Headless-service]$
+[kubeuser@medGPT Headless-service]$ k get svc
+NAME               TYPE           CLUSTER-IP       EXTERNAL-IP                  PORT(S)        AGE
+dns-externalname   ExternalName   <none>           finance-db.company.example   <none>         4m9s
+external-lb        LoadBalancer   10.101.122.192   <pending>                    80:30615/TCP   17m
+kubernetes         ClusterIP      10.96.0.1        <none>                       443/TCP        6d12h
+nodeport-service   NodePort       10.107.57.5      <none>                       80:30001/TCP   5d1h
+web-service        ClusterIP      10.97.179.196    <none>                       80/TCP         5d
+[kubeuser@medGPT Headless-service]$
+[kubeuser@medGPT Headless-service]$ k apply -f Headless-service.yml
+service/web-headless created
+[kubeuser@medGPT Headless-service]$
+[kubeuser@medGPT Headless-service]$ k get svc
+NAME               TYPE           CLUSTER-IP       EXTERNAL-IP                  PORT(S)        AGE
+dns-externalname   ExternalName   <none>           finance-db.company.example   <none>         4m22s
+external-lb        LoadBalancer   10.101.122.192   <pending>                    80:30615/TCP   17m
+kubernetes         ClusterIP      10.96.0.1        <none>                       443/TCP        6d12h
+nodeport-service   NodePort       10.107.57.5      <none>                       80:30001/TCP   5d1h
+web-headless       ClusterIP      None             <none>                       80/TCP         3s
+web-service        ClusterIP      10.97.179.196    <none>                       80/TCP         5d
+[kubeuser@medGPT Headless-service]$
+[kubeuser@medGPT Headless-service]$
+[kubeuser@medGPT Headless-service]$ kubectl get svc web-headless
+NAME           TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+web-headless   ClusterIP   None         <none>        80/TCP    28s
+[kubeuser@medGPT Headless-service]$

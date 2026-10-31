@@ -1,0 +1,56 @@
+[kubeuser@medGPT ExternalName]$ cat externalname-dns.yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: dns-externalname
+spec:
+  type: ExternalName
+  externalName: finance-db.company.example
+[kubeuser@medGPT ExternalName]$
+[kubeuser@medGPT ExternalName]$ k get svc
+NAME               TYPE           CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
+external-lb        LoadBalancer   10.101.122.192   <pending>     80:30615/TCP   13m
+kubernetes         ClusterIP      10.96.0.1        <none>        443/TCP        6d12h
+nodeport-service   NodePort       10.107.57.5      <none>        80:30001/TCP   5d
+web-service        ClusterIP      10.97.179.196    <none>        80/TCP         5d
+[kubeuser@medGPT ExternalName]$
+[kubeuser@medGPT ExternalName]$
+[kubeuser@medGPT ExternalName]$ k apply -f externalname-dns.yml
+service/dns-externalname created
+[kubeuser@medGPT ExternalName]$
+[kubeuser@medGPT ExternalName]$
+[kubeuser@medGPT ExternalName]$ k get svc
+NAME               TYPE           CLUSTER-IP       EXTERNAL-IP                  PORT(S)        AGE
+dns-externalname   ExternalName   <none>           finance-db.company.example   <none>         3s
+external-lb        LoadBalancer   10.101.122.192   <pending>                    80:30615/TCP   13m
+kubernetes         ClusterIP      10.96.0.1        <none>                       443/TCP        6d12h
+nodeport-service   NodePort       10.107.57.5      <none>                       80:30001/TCP   5d
+web-service        ClusterIP      10.97.179.196    <none>                       80/TCP         5d
+[kubeuser@medGPT ExternalName]$
+[kubeuser@medGPT ExternalName]$ kubectl run dns-test \
+>   --image=busybox:1.36 \
+>   --restart=Never \
+>   --rm -it \
+>   -- nslookup finance-db
+All commands and output from this session will be recorded in container logs, including credentials and sensitive information passed through the command prompt.
+If you don't see a command prompt, try pressing enter.
+warning: couldn't attach to pod/dns-test, falling back to streaming logs: Internal error occurred: Internal error occurred: error attaching to container: container is in CONTAINER_EXITED state
+Server:         10.96.0.10
+Address:        10.96.0.10:53
+
+** server can't find finance-db.svc.cluster.local: NXDOMAIN
+
+** server can't find finance-db.cluster.local: NXDOMAIN
+
+** server can't find finance-db.default.svc.cluster.local: NXDOMAIN
+
+** server can't find finance-db.cluster.local: NXDOMAIN
+
+** server can't find finance-db.svc.cluster.local: NXDOMAIN
+
+** server can't find finance-db.default.svc.cluster.local: NXDOMAIN
+
+pod "dns-test" deleted from default namespace
+pod default/dns-test terminated (Error)
+[kubeuser@medGPT ExternalName]$
+
