@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: bank-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: bank
+  template:
+    metadata:
+      labels:
+        app: bank
+    spec:
+     containers:
+       - name: bank-container
+         image: hashicorp/http-echo:1.0.0
+         args:
+            - "-text=Welcome to Bank Application"
+         ports:
+          - containerPort: 5678

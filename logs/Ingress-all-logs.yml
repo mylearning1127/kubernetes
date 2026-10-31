@@ -1,0 +1,464 @@
+[kubeuser@medGPT Ingress]$ minikube addons list
+┌─────────────────────────────┬──────────┬────────────┬────────────────────────────────────────┐
+│         ADDON NAME          │ PROFILE  │   STATUS   │               MAINTAINER               │
+├─────────────────────────────┼──────────┼────────────┼────────────────────────────────────────┤
+│ ambassador                  │ minikube │ disabled   │ 3rd party (Ambassador)                 │
+│ amd-gpu-device-plugin       │ minikube │ disabled   │ 3rd party (AMD)                        │
+│ auto-pause                  │ minikube │ disabled   │ minikube                               │
+│ cloud-spanner               │ minikube │ disabled   │ Google                                 │
+│ csi-hostpath-driver         │ minikube │ disabled   │ Kubernetes                             │
+│ dashboard                   │ minikube │ disabled   │ Kubernetes                             │
+│ default-storageclass        │ minikube │ enabled ✅ │ Kubernetes                             │
+│ efk                         │ minikube │ disabled   │ 3rd party (Elastic)                    │
+│ freshpod                    │ minikube │ disabled   │ Google                                 │
+│ gcp-auth                    │ minikube │ disabled   │ Google                                 │
+│ gvisor                      │ minikube │ disabled   │ minikube                               │
+│ headlamp                    │ minikube │ disabled   │ 3rd party (kinvolk.io)                 │
+│ inaccel                     │ minikube │ disabled   │ 3rd party (InAccel [info@inaccel.com]) │
+│ ingress                     │ minikube │ disabled   │ Kubernetes                             │
+│ ingress-dns                 │ minikube │ disabled   │ minikube                               │
+│ inspektor-gadget            │ minikube │ disabled   │ 3rd party (inspektor-gadget.io)        │
+│ istio                       │ minikube │ disabled   │ 3rd party (Istio)                      │
+│ istio-provisioner           │ minikube │ disabled   │ 3rd party (Istio)                      │
+│ kong                        │ minikube │ disabled   │ 3rd party (Kong HQ)                    │
+│ kubeflow                    │ minikube │ disabled   │ 3rd party                              │
+│ kubetail                    │ minikube │ disabled   │ 3rd party (kubetail.com)               │
+│ kubevirt                    │ minikube │ disabled   │ 3rd party (KubeVirt)                   │
+│ logviewer                   │ minikube │ disabled   │ 3rd party (unknown)                    │
+│ metallb                     │ minikube │ disabled   │ 3rd party (MetalLB)                    │
+│ metrics-server              │ minikube │ disabled   │ Kubernetes                             │
+│ nvidia-device-plugin        │ minikube │ disabled   │ 3rd party (NVIDIA)                     │
+│ nvidia-driver-installer     │ minikube │ disabled   │ 3rd party (NVIDIA)                     │
+│ nvidia-gpu-device-plugin    │ minikube │ disabled   │ 3rd party (NVIDIA)                     │
+│ olm                         │ minikube │ disabled   │ 3rd party (Operator Framework)         │
+│ pod-security-policy         │ minikube │ disabled   │ 3rd party (unknown)                    │
+│ portainer                   │ minikube │ disabled   │ 3rd party (Portainer.io)               │
+│ registry                    │ minikube │ disabled   │ minikube                               │
+│ registry-aliases            │ minikube │ disabled   │ 3rd party (unknown)                    │
+│ registry-creds              │ minikube │ disabled   │ 3rd party (UPMC Enterprises)           │
+│ storage-provisioner         │ minikube │ enabled ✅ │ minikube                               │
+│ storage-provisioner-rancher │ minikube │ disabled   │ 3rd party (Rancher)                    │
+│ traefik                     │ minikube │ disabled   │ 3rd party (Traefik Labs)               │
+│ volcano                     │ minikube │ disabled   │ third-party (volcano)                  │
+│ volumesnapshots             │ minikube │ disabled   │ Kubernetes                             │
+│ yakd                        │ minikube │ disabled   │ 3rd party (marcnuri.com)               │
+└─────────────────────────────┴──────────┴────────────┴────────────────────────────────────────┘
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$ minikube addons enable ingress
+* ingress is an addon maintained by Kubernetes. For any concerns contact minikube on GitHub.
+You can view the list of minikube maintainers at: https://github.com/kubernetes/minikube/blob/master/OWNERS
+  - Using image registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.6.9
+  - Using image registry.k8s.io/ingress-nginx/controller:v1.15.1
+  - Using image registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.6.9
+* Verifying ingress addon...
+* The 'ingress' addon is enabled
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$ minikube addons list
+┌─────────────────────────────┬──────────┬────────────┬────────────────────────────────────────┐
+│         ADDON NAME          │ PROFILE  │   STATUS   │               MAINTAINER               │
+├─────────────────────────────┼──────────┼────────────┼────────────────────────────────────────┤
+│ ambassador                  │ minikube │ disabled   │ 3rd party (Ambassador)                 │
+│ amd-gpu-device-plugin       │ minikube │ disabled   │ 3rd party (AMD)                        │
+│ auto-pause                  │ minikube │ disabled   │ minikube                               │
+│ cloud-spanner               │ minikube │ disabled   │ Google                                 │
+│ csi-hostpath-driver         │ minikube │ disabled   │ Kubernetes                             │
+│ dashboard                   │ minikube │ disabled   │ Kubernetes                             │
+│ default-storageclass        │ minikube │ enabled ✅ │ Kubernetes                             │
+│ efk                         │ minikube │ disabled   │ 3rd party (Elastic)                    │
+│ freshpod                    │ minikube │ disabled   │ Google                                 │
+│ gcp-auth                    │ minikube │ disabled   │ Google                                 │
+│ gvisor                      │ minikube │ disabled   │ minikube                               │
+│ headlamp                    │ minikube │ disabled   │ 3rd party (kinvolk.io)                 │
+│ inaccel                     │ minikube │ disabled   │ 3rd party (InAccel [info@inaccel.com]) │
+│ ingress                     │ minikube │ enabled ✅ │ Kubernetes                             │
+│ ingress-dns                 │ minikube │ disabled   │ minikube                               │
+│ inspektor-gadget            │ minikube │ disabled   │ 3rd party (inspektor-gadget.io)        │
+│ istio                       │ minikube │ disabled   │ 3rd party (Istio)                      │
+│ istio-provisioner           │ minikube │ disabled   │ 3rd party (Istio)                      │
+│ kong                        │ minikube │ disabled   │ 3rd party (Kong HQ)                    │
+│ kubeflow                    │ minikube │ disabled   │ 3rd party                              │
+│ kubetail                    │ minikube │ disabled   │ 3rd party (kubetail.com)               │
+│ kubevirt                    │ minikube │ disabled   │ 3rd party (KubeVirt)                   │
+│ logviewer                   │ minikube │ disabled   │ 3rd party (unknown)                    │
+│ metallb                     │ minikube │ disabled   │ 3rd party (MetalLB)                    │
+│ metrics-server              │ minikube │ disabled   │ Kubernetes                             │
+│ nvidia-device-plugin        │ minikube │ disabled   │ 3rd party (NVIDIA)                     │
+│ nvidia-driver-installer     │ minikube │ disabled   │ 3rd party (NVIDIA)                     │
+│ nvidia-gpu-device-plugin    │ minikube │ disabled   │ 3rd party (NVIDIA)                     │
+│ olm                         │ minikube │ disabled   │ 3rd party (Operator Framework)         │
+│ pod-security-policy         │ minikube │ disabled   │ 3rd party (unknown)                    │
+│ portainer                   │ minikube │ disabled   │ 3rd party (Portainer.io)               │
+│ registry                    │ minikube │ disabled   │ minikube                               │
+│ registry-aliases            │ minikube │ disabled   │ 3rd party (unknown)                    │
+│ registry-creds              │ minikube │ disabled   │ 3rd party (UPMC Enterprises)           │
+│ storage-provisioner         │ minikube │ enabled ✅ │ minikube                               │
+│ storage-provisioner-rancher │ minikube │ disabled   │ 3rd party (Rancher)                    │
+│ traefik                     │ minikube │ disabled   │ 3rd party (Traefik Labs)               │
+│ volcano                     │ minikube │ disabled   │ third-party (volcano)                  │
+│ volumesnapshots             │ minikube │ disabled   │ Kubernetes                             │
+│ yakd                        │ minikube │ disabled   │ 3rd party (marcnuri.com)               │
+└─────────────────────────────┴──────────┴────────────┴────────────────────────────────────────┘
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$ k get ns
+NAME              STATUS   AGE
+default           Active   6d13h
+ingress-nginx     Active   30m
+kube-node-lease   Active   6d13h
+kube-public       Active   6d13h
+kube-system       Active   6d13h
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$ k get pods -n ingress-nginx
+NAME                                       READY   STATUS      RESTARTS   AGE
+ingress-nginx-admission-create-gn52w       0/1     Completed   0          31m
+ingress-nginx-admission-patch-6jhxm        0/1     Completed   0          31m
+ingress-nginx-controller-d7cd8c989-zfh7v   1/1     Running     0          31m
+[kubeuser@medGPT Ingress]$
+
+
+[kubeuser@medGPT Ingress]$ k get all -n ingress-nginx
+NAME                                           READY   STATUS      RESTARTS   AGE
+pod/ingress-nginx-admission-create-gn52w       0/1     Completed   0          32m
+pod/ingress-nginx-admission-patch-6jhxm        0/1     Completed   0          32m
+pod/ingress-nginx-controller-d7cd8c989-zfh7v   1/1     Running     0          32m
+
+NAME                                         TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                      AGE
+service/ingress-nginx-controller             NodePort    10.109.163.125   <none>        80:31400/TCP,443:32478/TCP   32m
+service/ingress-nginx-controller-admission   ClusterIP   10.104.58.156    <none>        443/TCP                      32m
+
+NAME                                       READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/ingress-nginx-controller   1/1     1            1           32m
+
+NAME                                                 DESIRED   CURRENT   READY   AGE
+replicaset.apps/ingress-nginx-controller-d7cd8c989   1         1         1       32m
+
+NAME                                       STATUS     COMPLETIONS   DURATION   AGE
+job.batch/ingress-nginx-admission-create   Complete   1/1           9s         32m
+job.batch/ingress-nginx-admission-patch    Complete   1/1           9s         32m
+[kubeuser@medGPT Ingress]$
+
+
+=======================================================================================================================
+BANK APP CREATION 
+=======================================================================================================================
+
+[kubeuser@medGPT Ingress]$ cat bank-app.yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bank-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: bank
+  template:
+    metadata:
+      labels:
+        app: bank
+    spec:
+     containers:
+       - name: bank-container
+         image: hashicorp/http-echo:1.0.0
+         args:
+            - "-text=Welcome to Bank Application"
+         ports:
+          - containerPort: 5678
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$ k apply -f bank-app.yml
+deployment.apps/bank-deployment created
+[kubeuser@medGPT Ingress]$
+=======================================================================================================================
+API APP CREATION
+=======================================================================================================================
+
+[kubeuser@medGPT Ingress]$ k get pods
+NAME                               READY   STATUS              RESTARTS   AGE
+bank-deployment-6557ff5f4f-c9x7d   0/1     ContainerCreating   0          4s
+bank-deployment-6557ff5f4f-s59nk   0/1     ContainerCreating   0          4s
+[kubeuser@medGPT Ingress]$ k get all
+NAME                                   READY   STATUS    RESTARTS   AGE
+pod/bank-deployment-6557ff5f4f-c9x7d   1/1     Running   0          12s
+pod/bank-deployment-6557ff5f4f-s59nk   1/1     Running   0          12s
+
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   6d13h
+
+NAME                              READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/bank-deployment   2/2     2            2           13s
+
+NAME                                         DESIRED   CURRENT   READY   AGE
+replicaset.apps/bank-deployment-6557ff5f4f   2         2         2       12s
+[kubeuser@medGPT Ingress]$
+
+
+
+
+[kubeuser@medGPT Ingress]$ cat api-app.yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+        - name: api-container
+          image: hashicorp/http-echo:1.0.0
+          args:
+            - "-text=Welcome to Banking API"
+          ports:
+            - containerPort: 5678
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$ k apply -f api-app.yml
+deployment.apps/api-deployment created
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$ k get all
+NAME                                   READY   STATUS    RESTARTS   AGE
+pod/api-deployment-5cc9cc78cf-swb8w    1/1     Running   0          9s
+pod/api-deployment-5cc9cc78cf-xhnqj    1/1     Running   0          9s
+pod/bank-deployment-6557ff5f4f-c9x7d   1/1     Running   0          5m9s
+pod/bank-deployment-6557ff5f4f-s59nk   1/1     Running   0          5m9s
+
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   6d14h
+
+NAME                              READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/api-deployment    2/2     2            2           9s
+deployment.apps/bank-deployment   2/2     2            2           5m10s
+
+NAME                                         DESIRED   CURRENT   READY   AGE
+replicaset.apps/api-deployment-5cc9cc78cf    2         2         2       9s
+replicaset.apps/bank-deployment-6557ff5f4f   2         2         2       5m9s
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$ k get -f api-app.yml
+NAME             READY   UP-TO-DATE   AVAILABLE   AGE
+api-deployment   2/2     2            2           47s
+
+[kubeuser@medGPT Ingress]$ kubectl get all -l app=api -A
+NAMESPACE   NAME                                  READY   STATUS    RESTARTS   AGE
+default     pod/api-deployment-5cc9cc78cf-swb8w   1/1     Running   0          78s
+default     pod/api-deployment-5cc9cc78cf-xhnqj   1/1     Running   0          78s
+
+NAMESPACE   NAME                                        DESIRED   CURRENT   READY   AGE
+default     replicaset.apps/api-deployment-5cc9cc78cf   2         2         2       78s
+[kubeuser@medGPT Ingress]$
+
+=======================================================================================================================
+BANK & API SERVICE CREATION
+=======================================================================================================================
+[kubeuser@medGPT Ingress]$ k get svc --show-labels
+NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE     LABELS
+kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   6d14h   component=apiserver,provider=kubernetes
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$ cat api-service-clusterIP.yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-service
+spec:
+  type: ClusterIP
+  selector:
+    app: api
+  ports:
+    - port: 80
+      targetPort: 5678
+      protocol: TCP
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$ cat bank-service-clusterIP.yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: bank-service
+spec:
+  type: ClusterIP
+  selector:
+    app: bank
+  ports:
+    - port: 80
+      targetPort: 5678
+      protocol: TCP
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$ k apply -f api-service-clusterIP.yml
+service/api-service created
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$ k apply -f bank-service-clusterIP.yml
+service/bank-service created
+[kubeuser@medGPT Ingress]$
+
+[kubeuser@medGPT Ingress]$ k get svc --show-labels -o wide
+NAME           TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE     SELECTOR   LABELS
+api-service    ClusterIP   10.103.138.172   <none>        80/TCP    24s     app=api    <none>
+bank-service   ClusterIP   10.100.96.222    <none>        80/TCP    14s     app=bank   <none>
+kubernetes     ClusterIP   10.96.0.1        <none>        443/TCP   6d14h   <none>     component=apiserver,provider=kubernetes
+[kubeuser@medGPT Ingress]$
+
+[kubeuser@medGPT Ingress]$ k describe svc api-service
+Name:                     api-service
+Namespace:                default
+Labels:                   <none>
+Annotations:              <none>
+Selector:                 app=api
+Type:                     ClusterIP
+IP Family Policy:         SingleStack
+IP Families:              IPv4
+IP:                       10.103.138.172
+IPs:                      10.103.138.172
+Port:                     <unset>  80/TCP
+TargetPort:               5678/TCP
+Endpoints:                10.244.0.7:5678,10.244.0.6:5678
+Session Affinity:         None
+Internal Traffic Policy:  Cluster
+Events:                   <none>
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$ k describe svc bank-service
+Name:                     bank-service
+Namespace:                default
+Labels:                   <none>
+Annotations:              <none>
+Selector:                 app=bank
+Type:                     ClusterIP
+IP Family Policy:         SingleStack
+IP Families:              IPv4
+IP:                       10.100.96.222
+IPs:                      10.100.96.222
+Port:                     <unset>  80/TCP
+TargetPort:               5678/TCP
+Endpoints:                10.244.0.4:5678,10.244.0.5:5678
+Session Affinity:         None
+Internal Traffic Policy:  Cluster
+Events:                   <none>
+[kubeuser@medGPT Ingress]$
+
+
+[kubeuser@medGPT Ingress]$ k get pods --show-labels -o wide
+NAME                               READY   STATUS    RESTARTS   AGE   IP           NODE       NOMINATED NODE   READINESS GATES   LABELS
+api-deployment-5cc9cc78cf-swb8w    1/1     Running   0          24m   10.244.0.6   minikube   <none>           <none>            app=api,pod-template-hash=5cc9cc78cf
+api-deployment-5cc9cc78cf-xhnqj    1/1     Running   0          24m   10.244.0.7   minikube   <none>           <none>            app=api,pod-template-hash=5cc9cc78cf
+bank-deployment-6557ff5f4f-c9x7d   1/1     Running   0          29m   10.244.0.4   minikube   <none>           <none>            app=bank,pod-template-hash=6557ff5f4f
+bank-deployment-6557ff5f4f-s59nk   1/1     Running   0          29m   10.244.0.5   minikube   <none>           <none>            app=bank,pod-template-hash=6557ff5f4f
+[kubeuser@medGPT Ingress]$
+
+=======================================================================================================================
+Verify the ENDPOINTS
+=======================================================================================================================
+
+[kubeuser@medGPT Ingress]$ kubectl get endpoints bank-service
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME           ENDPOINTS                         AGE
+bank-service   10.244.0.4:5678,10.244.0.5:5678   5m22s
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$ kubectl get endpoints api-service
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME          ENDPOINTS                         AGE
+api-service   10.244.0.6:5678,10.244.0.7:5678   5m42s
+[kubeuser@medGPT Ingress]$
+
+
+=======================================================================================================================
+Ingress Creation
+=======================================================================================================================
+
+[kubeuser@medGPT Ingress]$ cat ingress.yml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bank-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: bank.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: bank-service
+                port:
+                  number: 80
+
+    - host: api.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api-service
+                port:
+                  number: 80
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$ k get ingress
+No resources found in default namespace.
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$ k apply -f ingress.yml
+ingress.networking.k8s.io/bank-ingress created
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$ k get ingress
+NAME           CLASS   HOSTS                              ADDRESS   PORTS   AGE
+bank-ingress   nginx   bank.example.com,api.example.com             80      2s
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$ kubectl describe ingress bank-ingress
+Name:             bank-ingress
+Labels:           <none>
+Namespace:        default
+Address:
+Ingress Class:    nginx
+Default backend:  <default>
+Rules:
+  Host              Path  Backends
+  ----              ----  --------
+  bank.example.com
+                    /   bank-service:80 (10.244.0.4:5678,10.244.0.5:5678)
+  api.example.com
+                    /   api-service:80 (10.244.0.7:5678,10.244.0.6:5678)
+Annotations:        <none>
+Events:
+  Type    Reason  Age   From                      Message
+  ----    ------  ----  ----                      -------
+  Normal  Sync    14s   nginx-ingress-controller  Scheduled for sync
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$
+
+=======================================================================================================================
+TESTING
+=======================================================================================================================
+
+[kubeuser@medGPT Ingress]$ minikube ip
+192.168.49.2
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$ curl -H "Host: bank.example.com" http://$(minikube ip)
+Welcome to Bank Application
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$ curl -H "Host: api.example.com" http://$(minikube ip)
+Welcome to Banking API
+[kubeuser@medGPT Ingress]$ vi ingress.yml
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$ vi /etc/hosts
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$ cat /etc/hosts
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+
+192.168.49.2  bank.example.com
+192.168.49.2 api.example.com
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$ curl http://bank.example.com
+Welcome to Bank Application
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$ curl http://api.example.com
+Welcome to Banking API
+[kubeuser@medGPT Ingress]$
+[kubeuser@medGPT Ingress]$
+
