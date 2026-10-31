@@ -191,3 +191,55 @@ KUBERNETES_PORT=tcp://10.96.0.1:443
 HOME=/root
 [kubeuser@medGPT 09-configmap]$
 
+
+============================================================================
+ConfigMap as mounted volume
+===========================================================================
+[kubeuser@medGPT 09-configmap]$ cat 03-configmap-as-mountedfile.yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: config-file-pod
+spec:
+  containers:
+    - name: nginx
+      image: nginx:1.28
+      volumeMounts:
+        - name: config-volume
+          mountPath: /etc/db-config
+  volumes:
+    - name: config-volume
+      configMap:
+        name: db-config
+[kubeuser@medGPT 09-configmap]$
+
+
+[kubeuser@medGPT 09-configmap]$ k get pods
+NAME                   READY   STATUS    RESTARTS   AGE
+var-via-env            1/1     Running   0          12m
+var-via-env-specific   1/1     Running   0          6m13s
+[kubeuser@medGPT 09-configmap]$
+[kubeuser@medGPT 09-configmap]$ k apply -f 03-configmap-as-mountedfile.yml
+pod/config-file-pod created
+[kubeuser@medGPT 09-configmap]$
+[kubeuser@medGPT 09-configmap]$ k get pods
+NAME                   READY   STATUS    RESTARTS   AGE
+config-file-pod        1/1     Running   0          2s
+var-via-env            1/1     Running   0          12m
+var-via-env-specific   1/1     Running   0          6m22s
+[kubeuser@medGPT 09-configmap]$
+
+
+[kubeuser@medGPT 09-configmap]$ kubectl exec config-file-pod -- ls -lrt /etc/db-config
+total 0
+lrwxrwxrwx 1 root root 14 Oct 31 09:02 DB_PORT -> ..data/DB_PORT
+lrwxrwxrwx 1 root root 14 Oct 31 09:02 DB_HOST -> ..data/DB_HOST
+lrwxrwxrwx 1 root root 20 Oct 31 09:02 APP_LOG_LEVEL -> ..data/APP_LOG_LEVEL
+lrwxrwxrwx 1 root root 14 Oct 31 09:02 APP_ENV -> ..data/APP_ENV
+[kubeuser@medGPT 09-configmap]$
+
+
+[kubeuser@medGPT 09-configmap]$ kubectl exec config-file-pod -- cat /etc/db-config/DB_HOST
+postgres-service
+[kubeuser@medGPT 09-configmap]$
+

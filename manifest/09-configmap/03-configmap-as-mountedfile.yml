@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: config-file-pod
+spec:
+  containers:
+    - name: nginx
+      image: nginx:1.28
+      volumeMounts:
+        - name: config-volume
+          mountPath: /etc/db-config
+  volumes:
+    - name: config-volume
+      configMap:
+        name: db-config
