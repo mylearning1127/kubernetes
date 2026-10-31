@@ -1,0 +1,193 @@
+=================================================================
+ConfigMap creation
+================================================================
+
+[kubeuser@medGPT 09-configmap]$ k get configmap
+NAME               DATA   AGE
+kube-root-ca.crt   1      6d15h
+[kubeuser@medGPT 09-configmap]$
+[kubeuser@medGPT 09-configmap]$ cat configmap.yml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-config
+data:
+  APP_ENV: "UAT"
+  DB_HOST: "postgres-service"
+  DB_PORT: "5432"
+  APP_LOG_LEVEL: "INFO"
+[kubeuser@medGPT 09-configmap]$ k apply -f configmap.yml
+configmap/db-config created
+[kubeuser@medGPT 09-configmap]$
+[kubeuser@medGPT 09-configmap]$ k get configmap
+NAME               DATA   AGE
+db-config          4      5s
+kube-root-ca.crt   1      6d15h
+[kubeuser@medGPT 09-configmap]$ k describe configmap db-config
+Name:         db-config
+Namespace:    default
+Labels:       <none>
+Annotations:  <none>
+
+Data
+====
+APP_ENV:
+----
+UAT
+
+APP_LOG_LEVEL:
+----
+INFO
+
+DB_HOST:
+----
+postgres-service
+
+DB_PORT:
+----
+5432
+
+
+BinaryData
+====
+
+Events:  <none>
+[kubeuser@medGPT 09-configmap]$
+
+[kubeuser@medGPT 09-configmap]$ kubectl get configmap db-config -o yaml
+apiVersion: v1
+data:
+  APP_ENV: UAT
+  APP_LOG_LEVEL: INFO
+  DB_HOST: postgres-service
+  DB_PORT: "5432"
+kind: ConfigMap
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","data":{"APP_ENV":"UAT","APP_LOG_LEVEL":"INFO","DB_HOST":"postgres-service","DB_PORT":"5432"},"kind":"ConfigMap","metadata":{"annotations":{},"name":"db-config","namespace":"default"}}
+  creationTimestamp: "2026-10-31T08:45:13Z"
+  name: db-config
+  namespace: default
+  resourceVersion: "38040"
+  uid: 4450802a-46af-4574-841d-a9deb428d93a
+[kubeuser@medGPT 09-configmap]$
+
+=================================================================
+Method 1 — Environment variables
+================================================================
+
+[kubeuser@medGPT 09-configmap]$ cat 01-pod-env-variable.yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: var-via-env
+spec:
+ containers:
+ - name: web-container
+   image: nginx
+   envFrom:
+   - configMapRef:
+        name: db-config
+
+
+[kubeuser@medGPT 09-configmap]$ k apply -f 01-pod-env-variable.yml
+pod/var-via-env created
+[kubeuser@medGPT 09-configmap]$
+
+
+[kubeuser@medGPT 09-configmap]$ k get pods
+NAME          READY   STATUS              RESTARTS   AGE
+var-via-env   0/1     ContainerCreating   0          4s
+
+
+[kubeuser@medGPT 09-configmap]$ k get pods
+NAME          READY   STATUS    RESTARTS   AGE
+var-via-env   1/1     Running   0          14s
+[kubeuser@medGPT 09-configmap]$
+
+
+[kubeuser@medGPT 09-configmap]$ k exec var-via-env -- env
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+HOSTNAME=var-via-env
+NGINX_VERSION=1.31.8
+NJS_VERSION=1.0.2
+NJS_RELEASE=1~trixie
+ACME_VERSION=0.4.1
+PKG_RELEASE=1~trixie
+DYNPKG_RELEASE=1~trixie
+APP_ENV=UAT
+APP_LOG_LEVEL=INFO
+DB_HOST=postgres-service
+DB_PORT=5432
+KUBERNETES_PORT_443_TCP_ADDR=10.96.0.1
+KUBERNETES_SERVICE_HOST=10.96.0.1
+KUBERNETES_SERVICE_PORT=443
+KUBERNETES_SERVICE_PORT_HTTPS=443
+KUBERNETES_PORT=tcp://10.96.0.1:443
+KUBERNETES_PORT_443_TCP=tcp://10.96.0.1:443
+KUBERNETES_PORT_443_TCP_PROTO=tcp
+KUBERNETES_PORT_443_TCP_PORT=443
+HOME=/root
+[kubeuser@medGPT 09-configmap]$
+
+================================================================
+Aaccess specific variable in YML
+================================================================
+[kubeuser@medGPT 09-configmap]$ cat 02-pod-env-variable.yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: var-via-env-specific
+spec:
+ containers:
+ - name: web-container
+   image: nginx
+   env:
+    - name: DATABASE_HOST
+      valueFrom:
+        configMapKeyRef:
+          name: db-config
+          key: DB_HOST
+[kubeuser@medGPT 09-configmap]$
+
+
+[kubeuser@medGPT 09-configmap]$ k get pods
+NAME          READY   STATUS    RESTARTS   AGE
+var-via-env   1/1     Running   0          5m54s
+[kubeuser@medGPT 09-configmap]$
+
+
+[kubeuser@medGPT 09-configmap]$ k apply -f 02-pod-env-variable.yml
+pod/var-via-env-specific created
+
+
+[kubeuser@medGPT 09-configmap]$
+[kubeuser@medGPT 09-configmap]$ k get pods
+NAME                   READY   STATUS    RESTARTS   AGE
+var-via-env            1/1     Running   0          6m6s
+var-via-env-specific   1/1     Running   0          5s
+[kubeuser@medGPT 09-configmap]$
+
+
+[kubeuser@medGPT 09-configmap]$ k exec var-via-env-specific --  env
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+HOSTNAME=var-via-env-specific
+NGINX_VERSION=1.31.8
+NJS_VERSION=1.0.2
+NJS_RELEASE=1~trixie
+ACME_VERSION=0.4.1
+PKG_RELEASE=1~trixie
+DYNPKG_RELEASE=1~trixie
+DATABASE_HOST=postgres-service
+KUBERNETES_PORT_443_TCP=tcp://10.96.0.1:443
+KUBERNETES_PORT_443_TCP_PROTO=tcp
+KUBERNETES_PORT_443_TCP_PORT=443
+KUBERNETES_PORT_443_TCP_ADDR=10.96.0.1
+KUBERNETES_SERVICE_HOST=10.96.0.1
+KUBERNETES_SERVICE_PORT=443
+KUBERNETES_SERVICE_PORT_HTTPS=443
+KUBERNETES_PORT=tcp://10.96.0.1:443
+HOME=/root
+[kubeuser@medGPT 09-configmap]$
+

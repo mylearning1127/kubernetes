@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-config
+data:
+  APP_ENV: "UAT"
+  DB_HOST: "postgres-service"
+  DB_PORT: "5432"
+  APP_LOG_LEVEL: "INFO"
