@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: DaemonSet
+
+metadata:
+  name: monitoring-agent
+
+spec:
+  selector:
+    matchLabels:
+      app: monitoring-agent
+
+  template:
+    metadata:
+      labels:
+        app: monitoring-agent
+
+    spec:
+      containers:
+        - name: agent
+          image: busybox:1.36
+
+          command:
+            - sh
+            - -c
+            - |
+              echo "Monitoring agent running on this node"
+              sleep 36000
