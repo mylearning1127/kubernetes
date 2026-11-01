@@ -1,0 +1,215 @@
+[root@minikube HPA-Horizontal-Pod-Autoscaler]# ll
+total 4
+-rw-r--r-- 1 root root 662 Nov  1 13:02 01-deployment.yml
+[root@minikube HPA-Horizontal-Pod-Autoscaler]# cat 01-deployment.yml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bank-app
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: bank-app
+
+  template:
+    metadata:
+      labels:
+        app: bank-app
+
+    spec:
+      containers:
+        - name: bank-container
+          image: registry.k8s.io/hpa-example
+          ports:
+            - containerPort: 80
+
+          resources:
+            requests:
+              cpu: 200m
+              memory: 100Mi
+
+            limits:
+              cpu: 500m
+              memory: 200Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bank-app
+spec:
+  selector:
+    app: bank-app
+  ports:
+    - port: 80
+      targetPort: 80
+[root@minikube HPA-Horizontal-Pod-Autoscaler]# k get all
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   64m
+[root@minikube HPA-Horizontal-Pod-Autoscaler]#
+[root@minikube HPA-Horizontal-Pod-Autoscaler]# k apply -f 01-deployment.yml
+deployment.apps/bank-app created
+service/bank-app created
+[root@minikube HPA-Horizontal-Pod-Autoscaler]#
+[root@minikube HPA-Horizontal-Pod-Autoscaler]# k get all
+NAME                            READY   STATUS              RESTARTS   AGE
+pod/bank-app-84946b8d65-6pqsx   0/1     ContainerCreating   0          3s
+pod/bank-app-84946b8d65-rg4jg   0/1     ContainerCreating   0          3s
+
+NAME                 TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+service/bank-app     ClusterIP   10.96.248.197   <none>        80/TCP    3s
+service/kubernetes   ClusterIP   10.96.0.1       <none>        443/TCP   64m
+
+NAME                       READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/bank-app   0/2     2            0           3s
+
+NAME                                  DESIRED   CURRENT   READY   AGE
+replicaset.apps/bank-app-84946b8d65   2         2         0       3s
+[root@minikube HPA-Horizontal-Pod-Autoscaler]#
+[root@minikube HPA-Horizontal-Pod-Autoscaler]#
+[root@minikube HPA-Horizontal-Pod-Autoscaler]# k get all
+NAME                            READY   STATUS              RESTARTS   AGE
+pod/bank-app-84946b8d65-6pqsx   0/1     ContainerCreating   0          30s
+pod/bank-app-84946b8d65-rg4jg   0/1     ContainerCreating   0          30s
+
+NAME                 TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+service/bank-app     ClusterIP   10.96.248.197   <none>        80/TCP    30s
+service/kubernetes   ClusterIP   10.96.0.1       <none>        443/TCP   64m
+
+NAME                       READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/bank-app   0/2     2            0           30s
+
+NAME                                  DESIRED   CURRENT   READY   AGE
+replicaset.apps/bank-app-84946b8d65   2         2         0       30s
+[root@minikube HPA-Horizontal-Pod-Autoscaler]#
+
+
+======================================================================
+Configuring HPA
+      NOTE: replica mentioned as 2 but in HPA min POD=3
+======================================================================
+
+[root@minikube HPA-Horizontal-Pod-Autoscaler]# cat 02-hpa.yml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+
+metadata:
+  name: bank-hpa
+
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: bank-app
+
+  minReplicas: 3
+  maxReplicas: 5
+
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+[root@minikube HPA-Horizontal-Pod-Autoscaler]#
+[root@minikube HPA-Horizontal-Pod-Autoscaler]# k get pods -o wide
+NAME                        READY   STATUS    RESTARTS   AGE    IP           NODE       NOMINATED NODE   READINESS GATES
+bank-app-84946b8d65-6pqsx   1/1     Running   0          4m4s   10.244.0.6   minikube   <none>           <none>
+bank-app-84946b8d65-rg4jg   1/1     Running   0          4m4s   10.244.0.7   minikube   <none>           <none>
+[root@minikube HPA-Horizontal-Pod-Autoscaler]#
+[root@minikube HPA-Horizontal-Pod-Autoscaler]# k apply -f 02-hpa.yml
+horizontalpodautoscaler.autoscaling/bank-hpa created
+[root@minikube HPA-Horizontal-Pod-Autoscaler]#
+[root@minikube HPA-Horizontal-Pod-Autoscaler]# k get pods -o wide
+NAME                        READY   STATUS    RESTARTS   AGE     IP           NODE       NOMINATED NODE   READINESS GATES
+bank-app-84946b8d65-4dpqf   1/1     Running   0          3s      10.244.0.8   minikube   <none>           <none>
+bank-app-84946b8d65-6pqsx   1/1     Running   0          4m14s   10.244.0.6   minikube   <none>           <none>
+bank-app-84946b8d65-rg4jg   1/1     Running   0          4m14s   10.244.0.7   minikube   <none>           <none>
+[root@minikube HPA-Horizontal-Pod-Autoscaler]#
+[root@minikube HPA-Horizontal-Pod-Autoscaler]#
+
+
+[root@minikube HPA-Horizontal-Pod-Autoscaler]# kubectl get hpa
+NAME       REFERENCE             TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+bank-hpa   Deployment/bank-app   cpu: 0%/50%   3         5         3          17s
+[root@minikube HPA-Horizontal-Pod-Autoscaler]#
+*********************************************************************************
+What does this mean?
+- 0% = current average CPU utilization (illustrative).
+- 50% = desired CPU utilization.
+- 3 = minimum number of Pods.
+- 5 = maximum number of Pods.
+- 3 = current number of replicas.
+*********************************************************************************
+
+
+====================================================================================
+Increase Load manually to test HPA
+NOTE: Normally Scale down take sometime even the utilization reaches mentioned usage
+====================================================================================
+
+[root@minikube HPA-Horizontal-Pod-Autoscaler]# kubectl run load-generator \
+>   --image=busybox:1.36 \
+>   --restart=Never \
+>   -it --rm -- /bin/sh
+All commands and output from this session will be recorded in container logs, including credentials and sensitive information passed through the command prompt.
+If you don't see a command prompt, try pressing enter.
+/ #
+/ #
+/ # while true
+> do
+>   wget -q -O- http://bank-app
+> done
+OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!OK!
+
+
+******************************************************************************
+[root@minikube ~]# kubectl get hpa bank-hpa -w
+NAME       REFERENCE             TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+bank-hpa   Deployment/bank-app   cpu: 0%/50%   3         5         3          2m57s
+bank-hpa   Deployment/bank-app   cpu: 82%/50%   3         5         3          3m45s
+bank-hpa   Deployment/bank-app   cpu: 82%/50%   3         5         5          4m
+bank-hpa   Deployment/bank-app   cpu: 73%/50%   3         5         5          4m45s
+bank-hpa   Deployment/bank-app   cpu: 13%/50%   3         5         5          5m45s
+bank-hpa   Deployment/bank-app   cpu: 0%/50%    3         5         5          6m45s
+bank-hpa   Deployment/bank-app   cpu: 0%/50%    3         5         5          10m
+bank-hpa   Deployment/bank-app   cpu: 0%/50%    3         5         3          10m
+bank-hpa   Deployment/bank-app   cpu: 0%/50%    3         5         3          11m
+
+******************************************************************************
+
+[root@minikube ~]# k get pods -w -o wide
+NAME                        READY   STATUS    RESTARTS   AGE     IP            NODE       NOMINATED NODE   READINESS GATES
+bank-app-84946b8d65-4dpqf   1/1     Running   0          4m15s   10.244.0.8    minikube   <none>           <none>
+bank-app-84946b8d65-6pqsx   1/1     Running   0          8m26s   10.244.0.6    minikube   <none>           <none>
+bank-app-84946b8d65-cb2nf   1/1     Running   0          30s     10.244.0.11   minikube   <none>           <none>
+bank-app-84946b8d65-htc6t   1/1     Running   0          30s     10.244.0.10   minikube   <none>           <none>
+bank-app-84946b8d65-rg4jg   1/1     Running   0          8m26s   10.244.0.7    minikube   <none>           <none>
+load-generator              1/1     Running   0          103s    10.244.0.9    minikube   <none>           <none>
+
+bank-app-84946b8d65-cb2nf   1/1     Terminating   0          6m46s   10.244.0.11   minikube   <none>           <none>
+bank-app-84946b8d65-htc6t   1/1     Terminating   0          6m46s   10.244.0.10   minikube   <none>           <none>
+bank-app-84946b8d65-cb2nf   1/1     Terminating   0          6m46s   10.244.0.11   minikube   <none>           <none>
+bank-app-84946b8d65-htc6t   1/1     Terminating   0          6m46s   10.244.0.10   minikube   <none>           <none>
+bank-app-84946b8d65-cb2nf   0/1     Completed     0          6m46s   10.244.0.11   minikube   <none>           <none>
+bank-app-84946b8d65-htc6t   0/1     Completed     0          6m46s   10.244.0.10   minikube   <none>           <none>
+bank-app-84946b8d65-htc6t   0/1     Completed     0          6m47s   10.244.0.10   minikube   <none>           <none>
+bank-app-84946b8d65-htc6t   0/1     Completed     0          6m47s   10.244.0.10   minikube   <none>           <none>
+bank-app-84946b8d65-cb2nf   0/1     Completed     0          6m47s   10.244.0.11   minikube   <none>           <none>
+bank-app-84946b8d65-cb2nf   0/1     Completed     0          6m47s   10.244.0.11   minikube   <none>           <none>
+
+******************************************************************************
+
+[root@minikube ~]# k get pods -o wide
+NAME                        READY   STATUS    RESTARTS   AGE     IP           NODE       NOMINATED NODE   READINESS GATES
+bank-app-84946b8d65-4dpqf   1/1     Running   0          11m     10.244.0.8   minikube   <none>           <none>
+bank-app-84946b8d65-6pqsx   1/1     Running   0          15m     10.244.0.6   minikube   <none>           <none>
+bank-app-84946b8d65-rg4jg   1/1     Running   0          15m     10.244.0.7   minikube   <none>           <none>
+load-generator              1/1     Running   0          8m40s   10.244.0.9   minikube   <none>           <none>
+[root@minikube ~]#
+
+******************************************************************************
+
