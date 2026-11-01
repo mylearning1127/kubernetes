@@ -1,0 +1,137 @@
+[root@minikube manifest]# k get all
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   27m
+[root@minikube manifest]#
+[root@minikube manifest]# cat 14-resource-request-limit.yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: resource-allocation
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+       app: resource-testing
+  template:
+     metadata:
+        labels:
+          app: resource-testing
+     spec:
+       containers:
+       - name: conatiner-1
+         image: nginx
+
+         resources:
+           requests:
+             cpu: "100m"
+             memory: "128Mi"
+
+           limits:
+             cpu: "200m"
+             memory: "256Mi"
+[root@minikube manifest]#
+[root@minikube manifest]# k apply -f 14-resource-request-limit.yml
+deployment.apps/resource-allocation created
+[root@minikube manifest]#
+[root@minikube manifest]# k get all
+NAME                                       READY   STATUS              RESTARTS   AGE
+pod/resource-allocation-59c5c969c4-5gxvm   0/1     ContainerCreating   0          4s
+pod/resource-allocation-59c5c969c4-vgwtj   0/1     ContainerCreating   0          4s
+
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   28m
+
+NAME                                  READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/resource-allocation   0/2     2            0           4s
+
+NAME                                             DESIRED   CURRENT   READY   AGE
+replicaset.apps/resource-allocation-59c5c969c4   2         2         0       4s
+[root@minikube manifest]#
+
+
+[root@minikube manifest]# k get all
+NAME                                       READY   STATUS    RESTARTS   AGE
+pod/resource-allocation-59c5c969c4-5gxvm   1/1     Running   0          23s
+pod/resource-allocation-59c5c969c4-vgwtj   1/1     Running   0          23s
+
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   28m
+
+NAME                                  READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/resource-allocation   2/2     2            2           23s
+
+NAME                                             DESIRED   CURRENT   READY   AGE
+replicaset.apps/resource-allocation-59c5c969c4   2         2         2       23s
+
+
+
+[root@minikube manifest]# k get pods -o wide
+NAME                                   READY   STATUS    RESTARTS   AGE   IP           NODE       NOMINATED NODE   READINESS GATES
+resource-allocation-59c5c969c4-5gxvm   1/1     Running   0          33s   10.244.0.3   minikube   <none>           <none>
+resource-allocation-59c5c969c4-vgwtj   1/1     Running   0          33s   10.244.0.4   minikube   <none>           <none>
+[root@minikube manifest]#
+
+
+[root@minikube manifest]# k describe pod/resource-allocation-59c5c969c4-5gxvm
+Name:             resource-allocation-59c5c969c4-5gxvm
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             minikube/192.168.49.2
+Start Time:       Sun, 01 Nov 2026 12:27:28 +0530
+Labels:           app=resource-testing
+                  pod-template-hash=59c5c969c4
+Annotations:      <none>
+Status:           Running
+IP:               10.244.0.3
+IPs:
+  IP:           10.244.0.3
+Controlled By:  ReplicaSet/resource-allocation-59c5c969c4
+Containers:
+  conatiner-1:
+    Container ID:   containerd://1efbe691e094f7f8c2db90e8ac5c84322944246a07a407579c7369d3dd651d75
+    Image:          nginx
+    Image ID:       docker.io/library/nginx@sha256:5ab5b0b01097420873a3f3330f44248e34a3c2a3e8d5ee30658aeae8cb7435da
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Sun, 01 Nov 2026 12:27:41 +0530
+    Ready:          True
+    Restart Count:  0
+    Limits:
+      cpu:     200m
+      memory:  256Mi
+    Requests:
+      cpu:        100m
+      memory:     128Mi
+    Environment:  <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-rr9nc (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True
+  Initialized                 True
+  Ready                       True
+  ContainersReady             True
+  PodScheduled                True
+Volumes:
+  kube-api-access-rr9nc:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   Burstable
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  40s   default-scheduler  Successfully assigned default/resource-allocation-59c5c969c4-5gxvm to minikube
+  Normal  Pulling    39s   kubelet            spec.containers{conatiner-1}: Pulling image "nginx"
+  Normal  Pulled     27s   kubelet            spec.containers{conatiner-1}: Successfully pulled image "nginx" in 11.543s (11.543s including waiting). Image size: 63932917 bytes.
+  Normal  Created    27s   kubelet            spec.containers{conatiner-1}: Container created
+  Normal  Started    27s   kubelet            spec.containers{conatiner-1}: Container started
+[root@minikube manifest]# ll
+
