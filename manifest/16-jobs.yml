@@ -1,0 +1,12 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cleanup-script
+spec:
+  template:
+    spec:
+      containers:
+        - name: log-cleanup
+          image: busybox
+          command: ["sh", "-c", "echo Starting the task; sleep 10; echo Task completed"]
+      restartPolicy: Never

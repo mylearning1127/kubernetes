@@ -1,0 +1,165 @@
+[root@minikube manifest]# cat 16-jobs.yml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cleanup-script
+spec:
+  template:
+    spec:
+      containers:
+        - name: log-cleanup
+          image: busybox
+          command: ["sh", "-c", "echo Starting the task; sleep 10; echo Task completed"]
+      restartPolicy: Never
+[root@minikube manifest]#
+
+
+[root@minikube manifest]# k get job
+No resources found in default namespace.
+[root@minikube manifest]#
+
+
+[root@minikube manifest]# k apply -f 16-jobs.yml
+job.batch/cleanup-script created
+[root@minikube manifest]#
+
+
+[root@minikube manifest]# k get job
+NAME             STATUS    COMPLETIONS   DURATION   AGE
+cleanup-script   Running   0/1           5s         5s
+[root@minikube manifest]#
+
+
+[root@minikube manifest]# k get pod -w -o wide
+NAME                   READY   STATUS    RESTARTS   AGE   IP            NODE       NOMINATED NODE   READINESS GATES
+cleanup-script-b45fs   1/1     Running   0          12s   10.244.0.12   minikube   <none>           <none>
+cleanup-script-b45fs   0/1     Completed   0          16s   10.244.0.12   minikube   <none>           <none>
+cleanup-script-b45fs   0/1     Completed   0          17s   10.244.0.12   minikube   <none>           <none>
+cleanup-script-b45fs   0/1     Completed   0          18s   10.244.0.12   minikube   <none>           <none>
+^C[root@minikube manifest]#
+
+
+[root@minikube manifest]# k get job
+NAME             STATUS     COMPLETIONS   DURATION   AGE
+cleanup-script   Complete   1/1           18s        30s
+
+
+[root@minikube manifest]# k describe job cleanup-script
+Name:             cleanup-script
+Namespace:        default
+Selector:         batch.kubernetes.io/controller-uid=dc5eea40-100e-4700-b202-94d3a20eadd8
+Labels:           batch.kubernetes.io/controller-uid=dc5eea40-100e-4700-b202-94d3a20eadd8
+                  batch.kubernetes.io/job-name=cleanup-script
+                  controller-uid=dc5eea40-100e-4700-b202-94d3a20eadd8
+                  job-name=cleanup-script
+Annotations:      <none>
+Parallelism:      1
+Completions:      1
+Completion Mode:  NonIndexed
+Suspend:          false
+Backoff Limit:    6
+Start Time:       Sun, 01 Nov 2026 15:07:28 +0530
+Completed At:     Sun, 01 Nov 2026 15:07:46 +0530
+Duration:         18s
+Pods Statuses:    0 Active (0 Ready) / 1 Succeeded / 0 Failed
+Pod Template:
+  Labels:  batch.kubernetes.io/controller-uid=dc5eea40-100e-4700-b202-94d3a20eadd8
+           batch.kubernetes.io/job-name=cleanup-script
+           controller-uid=dc5eea40-100e-4700-b202-94d3a20eadd8
+           job-name=cleanup-script
+  Containers:
+   log-cleanup:
+    Image:      busybox
+    Port:       <none>
+    Host Port:  <none>
+    Command:
+      sh
+      -c
+      echo Starting the task; sleep 10; echo Task completed
+    Environment:   <none>
+    Mounts:        <none>
+  Volumes:         <none>
+  Node-Selectors:  <none>
+  Tolerations:     <none>
+Events:
+  Type    Reason            Age   From            Message
+  ----    ------            ----  ----            -------
+  Normal  SuccessfulCreate  46s   job-controller  Created pod: cleanup-script-b45fs
+  Normal  Completed         28s   job-controller  Job completed
+[root@minikube manifest]#
+[root@minikube manifest]#
+
+
+
+[root@minikube manifest]# k describe pod cleanup-script-b45fs
+Name:             cleanup-script-b45fs
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             minikube/192.168.49.2
+Start Time:       Sun, 01 Nov 2026 15:07:28 +0530
+Labels:           batch.kubernetes.io/controller-uid=dc5eea40-100e-4700-b202-94d3a20eadd8
+                  batch.kubernetes.io/job-name=cleanup-script
+                  controller-uid=dc5eea40-100e-4700-b202-94d3a20eadd8
+                  job-name=cleanup-script
+Annotations:      <none>
+Status:           Succeeded
+IP:               10.244.0.12
+IPs:
+  IP:           10.244.0.12
+Controlled By:  Job/cleanup-script
+Containers:
+  log-cleanup:
+    Container ID:  containerd://efab0f8996045723308cc9d58875c33749db7392304d82eb8516b41a64cdb597
+    Image:         busybox
+    Image ID:      docker.io/library/busybox@sha256:a46257e06c82ad85242d0d38077d0a52d9896389ca60a1a59d3463db586e5fa4
+    Port:          <none>
+    Host Port:     <none>
+    Command:
+      sh
+      -c
+      echo Starting the task; sleep 10; echo Task completed
+    State:          Terminated
+      Reason:       Completed
+      Exit Code:    0
+      Started:      Sun, 01 Nov 2026 15:07:33 +0530
+      Finished:     Sun, 01 Nov 2026 15:07:44 +0530
+    Ready:          False
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-9zfdf (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   False
+  Initialized                 True
+  Ready                       False
+  ContainersReady             False
+  PodScheduled                True
+Volumes:
+  kube-api-access-9zfdf:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  61s   default-scheduler  Successfully assigned default/cleanup-script-b45fs to minikube
+  Normal  Pulling    60s   kubelet            spec.containers{log-cleanup}: Pulling image "busybox"
+  Normal  Pulled     56s   kubelet            spec.containers{log-cleanup}: Successfully pulled image "busybox" in 4.35s (4.35s including waiting). Image size: 2236767 bytes.
+  Normal  Created    56s   kubelet            spec.containers{log-cleanup}: Container created
+  Normal  Started    56s   kubelet            spec.containers{log-cleanup}: Container started
+[root@minikube manifest]#
+
+
+[root@minikube manifest]# k logs cleanup-script-b45fs
+Starting the task
+Task completed
+[root@minikube manifest]#
+

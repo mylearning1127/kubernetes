@@ -1,0 +1,122 @@
+==================================================
+MULTI POD CREATION for a JOB Based on the completion Value
+=================================================
+
+[root@minikube manifest]# cat 16-01-job-additional-option.yml
+apiVersion: batch/v1
+kind: Job
+
+metadata:
+  name: reconciliation-job
+
+spec:
+  completions: 3
+  parallelism: 2
+  backoffLimit: 3
+
+  template:
+    metadata:
+      labels:
+        app: reconciliation
+
+    spec:
+      restartPolicy: Never
+
+      containers:
+        - name: reconciliation
+          image: busybox:1.36
+
+          command:
+            - sh
+            - -c
+            - |
+              echo "Starting transaction reconciliation"
+              sleep 20
+              echo "Checking payment transactions"
+              echo "Reconciliation completed"
+[root@minikube manifest]#
+
+
+[root@minikube manifest]# k apply -f 16-01-job-additional-option.yml
+job.batch/reconciliation-job created
+[root@minikube manifest]#
+
+=================================================
+JOB output
+=================================================
+
+[root@minikube ~]# k get job -w -o wide
+NAME                 STATUS    COMPLETIONS   DURATION   AGE   CONTAINERS       IMAGES         SELECTOR
+reconciliation-job   Running   0/3                      0s    reconciliation   busybox:1.36   batch.kubernetes.io/controller-uid=fe364e1f-05eb-4328-bea9-d4ca44ae300a
+reconciliation-job   Running   0/3           0s         0s    reconciliation   busybox:1.36   batch.kubernetes.io/controller-uid=fe364e1f-05eb-4328-bea9-d4ca44ae300a
+reconciliation-job   Running   0/3           1s         1s    reconciliation   busybox:1.36   batch.kubernetes.io/controller-uid=fe364e1f-05eb-4328-bea9-d4ca44ae300a
+reconciliation-job   Running   0/3           23s        23s   reconciliation   busybox:1.36   batch.kubernetes.io/controller-uid=fe364e1f-05eb-4328-bea9-d4ca44ae300a
+reconciliation-job   Running   0/3           24s        24s   reconciliation   busybox:1.36   batch.kubernetes.io/controller-uid=fe364e1f-05eb-4328-bea9-d4ca44ae300a
+reconciliation-job   Running   2/3           24s        24s   reconciliation   busybox:1.36   batch.kubernetes.io/controller-uid=fe364e1f-05eb-4328-bea9-d4ca44ae300a
+reconciliation-job   Running   2/3           25s        25s   reconciliation   busybox:1.36   batch.kubernetes.io/controller-uid=fe364e1f-05eb-4328-bea9-d4ca44ae300a
+reconciliation-job   Running   2/3           46s        46s   reconciliation   busybox:1.36   batch.kubernetes.io/controller-uid=fe364e1f-05eb-4328-bea9-d4ca44ae300a
+reconciliation-job   SuccessCriteriaMet   2/3           47s        47s   reconciliation   busybox:1.36   batch.kubernetes.io/controller-uid=fe364e1f-05eb-4328-bea9-d4ca44ae300a
+reconciliation-job   Complete             3/3           47s        47s   reconciliation   busybox:1.36   batch.kubernetes.io/controller-uid=fe364e1f-05eb-4328-bea9-d4ca44ae300a
+
+
+===================================================
+POD output
+===================================================
+[root@minikube ~]# k get pod -w -o wide
+NAME                       READY   STATUS    RESTARTS   AGE   IP       NODE     NOMINATED NODE   READINESS GATES
+reconciliation-job-kbwkr   0/1     Pending   0          0s    <none>   <none>   <none>           <none>
+reconciliation-job-tsscg   0/1     Pending   0          0s    <none>   <none>   <none>           <none>
+reconciliation-job-kbwkr   0/1     Pending   0          0s    <none>   minikube   <none>           <none>
+reconciliation-job-tsscg   0/1     Pending   0          0s    <none>   minikube   <none>           <none>
+reconciliation-job-kbwkr   0/1     ContainerCreating   0          0s    <none>   minikube   <none>           <none>
+reconciliation-job-tsscg   0/1     ContainerCreating   0          0s    <none>   minikube   <none>           <none>
+reconciliation-job-tsscg   0/1     ContainerCreating   0          1s    <none>   minikube   <none>           <none>
+reconciliation-job-kbwkr   0/1     ContainerCreating   0          1s    <none>   minikube   <none>           <none>
+reconciliation-job-tsscg   1/1     Running             0          1s    10.244.0.17   minikube   <none>           <none>
+reconciliation-job-kbwkr   1/1     Running             0          1s    10.244.0.16   minikube   <none>           <none>
+reconciliation-job-tsscg   0/1     Completed           0          22s   10.244.0.17   minikube   <none>           <none>
+reconciliation-job-kbwkr   0/1     Completed           0          22s   10.244.0.16   minikube   <none>           <none>
+reconciliation-job-tsscg   0/1     Completed           0          23s   10.244.0.17   minikube   <none>           <none>
+reconciliation-job-kbwkr   0/1     Completed           0          23s   10.244.0.16   minikube   <none>           <none>
+reconciliation-job-c7r29   0/1     Pending             0          0s    <none>        <none>     <none>           <none>
+reconciliation-job-c7r29   0/1     Pending             0          0s    <none>        minikube   <none>           <none>
+reconciliation-job-tsscg   0/1     Completed           0          24s   10.244.0.17   minikube   <none>           <none>
+reconciliation-job-kbwkr   0/1     Completed           0          24s   10.244.0.16   minikube   <none>           <none>
+reconciliation-job-c7r29   0/1     ContainerCreating   0          0s    <none>        minikube   <none>           <none>
+reconciliation-job-c7r29   0/1     ContainerCreating   0          1s    <none>        minikube   <none>           <none>
+reconciliation-job-c7r29   1/1     Running             0          1s    10.244.0.18   minikube   <none>           <none>
+reconciliation-job-c7r29   0/1     Completed           0          21s   10.244.0.18   minikube   <none>           <none>
+reconciliation-job-c7r29   0/1     Completed           0          22s   10.244.0.18   minikube   <none>           <none>
+reconciliation-job-c7r29   0/1     Completed           0          23s   10.244.0.18   minikube   <none>           <none>
+reconciliation-job-c7r29   0/1     Completed           0          23s   10.244.0.18   minikube   <none>           <none>
+
+
+==================================================
+POD Logs
+==================================================
+[root@minikube ~]# k get pods
+NAME                       READY   STATUS      RESTARTS   AGE
+reconciliation-job-c7r29   0/1     Completed   0          5m35s
+reconciliation-job-kbwkr   0/1     Completed   0          5m59s
+reconciliation-job-tsscg   0/1     Completed   0          5m59s
+
+
+[root@minikube ~]# k logs reconciliation-job-c7r29
+Starting transaction reconciliation
+Checking payment transactions
+Reconciliation completed
+[root@minikube ~]#
+
+
+[root@minikube ~]# k logs reconciliation-job-kbwkr
+Starting transaction reconciliation
+Checking payment transactions
+Reconciliation completed
+[root@minikube ~]#
+
+
+[root@minikube ~]# k logs reconciliation-job-tsscg
+Starting transaction reconciliation
+Checking payment transactions
+Reconciliation complet
+

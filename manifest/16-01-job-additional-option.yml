@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: Job
+
+metadata:
+  name: reconciliation-job
+
+spec:
+  completions: 3
+  parallelism: 2
+  backoffLimit: 3
+
+  template:
+    metadata:
+      labels:
+        app: reconciliation
+
+    spec:
+      restartPolicy: Never
+
+      containers:
+        - name: reconciliation
+          image: busybox:1.36
+
+          command:
+            - sh
+            - -c
+            - |
+              echo "Starting transaction reconciliation"
+              sleep 20
+              echo "Checking payment transactions"
+              echo "Reconciliation completed"
