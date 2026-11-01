@@ -585,3 +585,142 @@ employee-postgres-sbdgk            IPv4          5432    10.244.0.40            
 
 =============================================================================================================
 
+[root@minikube employee-management-platform]# minikube service employee-frontend-nodeport -n employee-platform
+┌───────────────────┬────────────────────────────┬─────────────┬───────────────────────────┐
+│     NAMESPACE     │            NAME            │ TARGET PORT │            URL            │
+├───────────────────┼────────────────────────────┼─────────────┼───────────────────────────┤
+│ employee-platform │ employee-frontend-nodeport │ http/80     │ http://192.168.49.2:30080 │
+└───────────────────┴────────────────────────────┴─────────────┴───────────────────────────┘
+* Opening service employee-platform/employee-frontend-nodeport in default browser...
+  http://192.168.49.2:30080
+[root@minikube employee-management-platform]#
+
+=============================================================================================================
+
+[root@minikube employee-management-platform]# kubectl apply -f 03-networking/frontend-service.yaml
+service/employee-frontend created
+[root@minikube employee-management-platform]#
+[root@minikube employee-management-platform]# kubectl apply -f 03-networking/frontend-service.yaml
+service/employee-frontend unchanged
+[root@minikube employee-management-platform]# kubectl get all -n employee-platform
+NAME                                     READY   STATUS    RESTARTS   AGE
+pod/employee-api-7f6446b8cd-r6572        1/1     Running   0          13m
+pod/employee-api-7f6446b8cd-sbmfc        1/1     Running   0          13m
+pod/employee-frontend-84cd97bbf6-mrjf4   1/1     Running   0          19m
+pod/employee-frontend-84cd97bbf6-vsrsb   1/1     Running   0          19m
+pod/employee-postgres-8d78f86bf-g7dnt    1/1     Running   0          20m
+pod/employee-worker-66b47bb79f-bf5fh     1/1     Running   0          11m
+
+NAME                                 TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+service/employee-api                 ClusterIP   10.105.48.15    <none>        80/TCP         10m
+service/employee-frontend            ClusterIP   10.101.139.2    <none>        80/TCP         8s
+service/employee-frontend-nodeport   NodePort    10.103.76.42    <none>        80:30080/TCP   10m
+service/employee-postgres            ClusterIP   10.100.133.99   <none>        5432/TCP       19m
+
+NAME                                READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/employee-api        2/2     2            2           19m
+deployment.apps/employee-frontend   2/2     2            2           19m
+deployment.apps/employee-postgres   1/1     1            1           20m
+deployment.apps/employee-worker     1/1     1            1           11m
+
+NAME                                           DESIRED   CURRENT   READY   AGE
+replicaset.apps/employee-api-7f6446b8cd        2         2         2       19m
+replicaset.apps/employee-frontend-84cd97bbf6   2         2         2       19m
+replicaset.apps/employee-postgres-8d78f86bf    1         1         1       20m
+replicaset.apps/employee-worker-66b47bb79f     1         1   
+
+=============================================================================================================
+
+[root@minikube employee-management-platform]# minikube addons enable ingress
+* ingress is an addon maintained by Kubernetes. For any concerns contact minikube on GitHub.
+You can view the list of minikube maintainers at: https://github.com/kubernetes/minikube/blob/master/OWNERS
+  - Using image registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.6.9
+  - Using image registry.k8s.io/ingress-nginx/controller:v1.15.1
+  - Using image registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.6.9
+* Verifying ingress addon...
+* The 'ingress' addon is enabled
+[root@minikube employee-management-platform]# minikube addons list
+┌─────────────────────────────┬──────────┬────────────┬────────────────────────────────────────┐
+│         ADDON NAME          │ PROFILE  │   STATUS   │               MAINTAINER               │
+├─────────────────────────────┼──────────┼────────────┼────────────────────────────────────────┤
+│ ambassador                  │ minikube │ disabled   │ 3rd party (Ambassador)                 │
+│ amd-gpu-device-plugin       │ minikube │ disabled   │ 3rd party (AMD)                        │
+│ auto-pause                  │ minikube │ disabled   │ minikube                               │
+│ cloud-spanner               │ minikube │ disabled   │ Google                                 │
+│ csi-hostpath-driver         │ minikube │ disabled   │ Kubernetes                             │
+│ dashboard                   │ minikube │ disabled   │ Kubernetes                             │
+│ default-storageclass        │ minikube │ enabled ✅ │ Kubernetes                             │
+│ efk                         │ minikube │ disabled   │ 3rd party (Elastic)                    │
+│ freshpod                    │ minikube │ disabled   │ Google                                 │
+│ gcp-auth                    │ minikube │ disabled   │ Google                                 │
+│ gvisor                      │ minikube │ disabled   │ minikube                               │
+│ headlamp                    │ minikube │ disabled   │ 3rd party (kinvolk.io)                 │
+│ inaccel                     │ minikube │ disabled   │ 3rd party (InAccel [info@inaccel.com]) │
+│ ingress                     │ minikube │ enabled ✅ │ Kubernetes                             │
+│ ingress-dns                 │ minikube │ disabled   │ minikube                               │
+│ inspektor-gadget            │ minikube │ disabled   │ 3rd party (inspektor-gadget.io)        │
+│ istio                       │ minikube │ disabled   │ 3rd party (Istio)                      │
+│ istio-provisioner           │ minikube │ disabled   │ 3rd party (Istio)                      │
+│ kong                        │ minikube │ disabled   │ 3rd party (Kong HQ)                    │
+│ kubeflow                    │ minikube │ disabled   │ 3rd party                              │
+│ kubetail                    │ minikube │ disabled   │ 3rd party (kubetail.com)               │
+│ kubevirt                    │ minikube │ disabled   │ 3rd party (KubeVirt)                   │
+│ logviewer                   │ minikube │ disabled   │ 3rd party (unknown)                    │
+│ metallb                     │ minikube │ disabled   │ 3rd party (MetalLB)                    │
+│ metrics-server              │ minikube │ enabled ✅ │ Kubernetes                             │
+│ nvidia-device-plugin        │ minikube │ disabled   │ 3rd party (NVIDIA)                     │
+│ nvidia-driver-installer     │ minikube │ disabled   │ 3rd party (NVIDIA)                     │
+│ nvidia-gpu-device-plugin    │ minikube │ disabled   │ 3rd party (NVIDIA)                     │
+│ olm                         │ minikube │ disabled   │ 3rd party (Operator Framework)         │
+│ pod-security-policy         │ minikube │ disabled   │ 3rd party (unknown)                    │
+│ portainer                   │ minikube │ disabled   │ 3rd party (Portainer.io)               │
+│ registry                    │ minikube │ disabled   │ minikube                               │
+│ registry-aliases            │ minikube │ disabled   │ 3rd party (unknown)                    │
+│ registry-creds              │ minikube │ disabled   │ 3rd party (UPMC Enterprises)           │
+│ storage-provisioner         │ minikube │ enabled ✅ │ minikube                               │
+│ storage-provisioner-rancher │ minikube │ disabled   │ 3rd party (Rancher)                    │
+│ traefik                     │ minikube │ disabled   │ 3rd party (Traefik Labs)               │
+│ volcano                     │ minikube │ disabled   │ third-party (volcano)                  │
+│ volumesnapshots             │ minikube │ disabled   │ Kubernetes                             │
+│ yakd                        │ minikube │ disabled   │ 3rd party (marcnuri.com)               │
+└─────────────────────────────┴──────────┴────────────┴────────────────────────────────────────┘
+[root@minikube employee-management-platform]#
+
+=======================================================================================================
+
+[root@minikube employee-management-platform]# kubectl apply -f 03-networking/ingress-path-routing.yaml
+ingress.networking.k8s.io/employee-path-ingress created
+[root@minikube employee-management-platform]#
+[root@minikube employee-management-platform]#
+[root@minikube employee-management-platform]# kubectl get all -n employee-platform
+NAME                                     READY   STATUS    RESTARTS   AGE
+pod/employee-api-7f6446b8cd-r6572        1/1     Running   0          16m
+pod/employee-api-7f6446b8cd-sbmfc        1/1     Running   0          16m
+pod/employee-frontend-84cd97bbf6-mrjf4   1/1     Running   0          22m
+pod/employee-frontend-84cd97bbf6-vsrsb   1/1     Running   0          22m
+pod/employee-postgres-8d78f86bf-g7dnt    1/1     Running   0          24m
+pod/employee-worker-66b47bb79f-bf5fh     1/1     Running   0          14m
+
+NAME                                 TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+service/employee-api                 ClusterIP   10.105.48.15    <none>        80/TCP         13m
+service/employee-frontend            ClusterIP   10.101.139.2    <none>        80/TCP         3m19s
+service/employee-frontend-nodeport   NodePort    10.103.76.42    <none>        80:30080/TCP   13m
+service/employee-postgres            ClusterIP   10.100.133.99   <none>        5432/TCP       23m
+
+NAME                                READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/employee-api        2/2     2            2           22m
+deployment.apps/employee-frontend   2/2     2            2           22m
+deployment.apps/employee-postgres   1/1     1            1           24m
+deployment.apps/employee-worker     1/1     1            1           14m
+
+NAME                                           DESIRED   CURRENT   READY   AGE
+replicaset.apps/employee-api-7f6446b8cd        2         2         2       22m
+replicaset.apps/employee-frontend-84cd97bbf6   2         2         2       22m
+replicaset.apps/employee-postgres-8d78f86bf    1         1         1       24m
+replicaset.apps/employee-worker-66b47bb79f     1         1         1       14m
+[root@minikube employee-management-platform]#
+
+=======================================================================================================
+
+
+
