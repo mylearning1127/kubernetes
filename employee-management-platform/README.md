@@ -23,9 +23,9 @@ kubectl get nodes -o wide
 
 # Build images inside Minikube's Docker environment.
 eval "$(minikube docker-env)"
-docker build -t employee-frontend:1.0 ./application/frontend
-docker build -t employee-api:1.0 ./application/api
-docker build -t employee-worker:1.0 ./application/worker
+minikube image build -t employee-frontend:1.0 ./application/frontend
+minikube image build -t employee-api:1.0 ./application/api
+minikube image build -t employee-worker:1.0 ./application/worker
 
 # Create namespace and configuration.
 kubectl apply -f 02-workloads/namespace.yaml
