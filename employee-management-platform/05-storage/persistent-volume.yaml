@@ -1,0 +1,15 @@
+# Minikube/local lab only: hostPath is node-local and not a production shared disk.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: employee-local-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  hostPath:
+    path: /mnt/data/employee-platform
+    type: DirectoryOrCreate

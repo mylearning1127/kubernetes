@@ -1,0 +1,12 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: employee-node-viewer-binding
+subjects:
+  - kind: ServiceAccount
+    name: employee-viewer
+    namespace: employee-platform
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: employee-node-viewer

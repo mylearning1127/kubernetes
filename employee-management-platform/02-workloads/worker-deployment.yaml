@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: employee-worker
+  namespace: employee-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: employee-worker
+  template:
+    metadata:
+      labels:
+        app: employee-worker
+    spec:
+      containers:
+        - name: worker
+          image: employee-worker:1.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: WORK_INTERVAL_SECONDS
+              value: "30"
+          resources:
+            requests:
+              cpu: 25m
+              memory: 24Mi
+            limits:
+              cpu: 150m
+              memory: 96Mi

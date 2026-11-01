@@ -1,0 +1,14 @@
+# Requires VPA components/CRDs to be installed separately.
+# Recommendation-only mode avoids automatic Pod updates.
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: employee-api-vpa
+  namespace: employee-platform
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: employee-api
+  updatePolicy:
+    updateMode: "Off"

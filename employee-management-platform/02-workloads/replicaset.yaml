@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: employee-demo-rs
+  namespace: employee-platform
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: employee-rs-demo
+  template:
+    metadata:
+      labels:
+        app: employee-rs-demo
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.28
+          ports:
+            - containerPort: 80

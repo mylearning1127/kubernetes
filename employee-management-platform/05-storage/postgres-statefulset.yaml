@@ -1,0 +1,55 @@
+# Alternative to postgres-deployment.yaml. Do not run both against the same PVC.
+apiVersion: v1
+kind: Service
+metadata:
+  name: employee-postgres-headless
+  namespace: employee-platform
+spec:
+  clusterIP: None
+  selector:
+    app: employee-postgres-sts
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: employee-postgres-sts
+  namespace: employee-platform
+spec:
+  serviceName: employee-postgres-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: employee-postgres-sts
+  template:
+    metadata:
+      labels:
+        app: employee-postgres-sts
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          ports:
+            - name: postgres
+              containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: employees
+            - name: POSTGRES_USER
+              value: employee_app
+            - name: POSTGRES_PASSWORD
+              value: change-me-lab-only
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi

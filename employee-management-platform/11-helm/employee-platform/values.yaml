@@ -1,0 +1,9 @@
+namespace: employee-platform
+frontend:
+  replicas: 2
+  image: employee-frontend:1.0
+  servicePort: 80
+api:
+  replicas: 2
+  image: employee-api:1.0
+  containerPort: 5000

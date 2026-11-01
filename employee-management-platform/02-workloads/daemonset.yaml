@@ -1,0 +1,20 @@
+# Optional demo: DaemonSet creates one Pod on each eligible node.
+# This example uses a harmless node-level log tail placeholder.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: employee-node-agent-demo
+  namespace: employee-platform
+spec:
+  selector:
+    matchLabels:
+      app: employee-node-agent-demo
+  template:
+    metadata:
+      labels:
+        app: employee-node-agent-demo
+    spec:
+      containers:
+        - name: agent
+          image: busybox:1.36
+          command: ["sh", "-c", "while true; do echo node-agent-demo; sleep 60; done"]

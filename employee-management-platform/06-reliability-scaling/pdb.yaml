@@ -1,0 +1,10 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: employee-api-pdb
+  namespace: employee-platform
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: employee-api

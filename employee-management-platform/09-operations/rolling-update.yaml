@@ -1,0 +1,26 @@
+# Apply after frontend-deployment.yaml. Change image tag to demonstrate a rollout.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: employee-rollout-demo
+  namespace: employee-platform
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: employee-rollout-demo
+  template:
+    metadata:
+      labels:
+        app: employee-rollout-demo
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.28
+          ports:
+            - containerPort: 80

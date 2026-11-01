@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: employee-topology-demo
+  namespace: employee-platform
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: employee-topology-demo
+  template:
+    metadata:
+      labels:
+        app: employee-topology-demo
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: employee-topology-demo
+      containers:
+        - name: demo
+          image: nginx:1.28

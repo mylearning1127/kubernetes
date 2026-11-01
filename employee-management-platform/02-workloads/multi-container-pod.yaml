@@ -1,0 +1,21 @@
+# Both containers share the Pod network namespace: localhost is shared.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: employee-multi-container-demo
+  namespace: employee-platform
+spec:
+  containers:
+    - name: web
+      image: nginx:1.28
+      ports:
+        - containerPort: 80
+    - name: sidecar
+      image: busybox:1.36
+      command: ["sh", "-c", "while true; do date >> /shared/heartbeat.txt; sleep 10; done"]
+      volumeMounts:
+        - name: shared-data
+          mountPath: /shared
+  volumes:
+    - name: shared-data
+      emptyDir: {}

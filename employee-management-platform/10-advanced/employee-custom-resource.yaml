@@ -1,0 +1,8 @@
+apiVersion: learning.example.com/v1
+kind: Employee
+metadata:
+  name: sample-employee
+  namespace: employee-platform
+spec:
+  fullName: Asha Kumar
+  department: Engineering

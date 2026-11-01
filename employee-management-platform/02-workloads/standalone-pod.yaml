@@ -1,0 +1,16 @@
+# Standalone Pod: deleting this Pod does not make a controller recreate it.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: employee-debug-pod
+  namespace: employee-platform
+  labels:
+    app: employee-debug
+spec:
+  restartPolicy: Always
+  containers:
+    - name: web
+      image: nginx:1.28
+      ports:
+        - name: http
+          containerPort: 80

@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: employee-affinity-demo
+  namespace: employee-platform
+  labels:
+    app: employee-affinity-demo
+spec:
+  affinity:
+    podAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 50
+          podAffinityTerm:
+            topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchLabels:
+                app: employee-frontend
+  containers:
+    - name: demo
+      image: busybox:1.36
+      command: ["sh", "-c", "sleep 3600"]

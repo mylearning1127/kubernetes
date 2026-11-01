@@ -1,0 +1,10 @@
+# Reference example only. Do not apply alongside Minikube's default StorageClass
+# unless you intentionally configure a matching provisioner.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: employee-example-storage
+provisioner: example.com.invalid/employee-provisioner
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true

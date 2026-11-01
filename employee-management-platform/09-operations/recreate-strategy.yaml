@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: employee-recreate-demo
+  namespace: employee-platform
+spec:
+  replicas: 2
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: employee-recreate-demo
+  template:
+    metadata:
+      labels:
+        app: employee-recreate-demo
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.28

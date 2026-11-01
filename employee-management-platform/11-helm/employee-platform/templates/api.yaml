@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: employee-api
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.api.replicas }}
+  selector:
+    matchLabels:
+      app: employee-api
+  template:
+    metadata:
+      labels:
+        app: employee-api
+    spec:
+      containers:
+        - name: api
+          image: {{ .Values.api.image }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: {{ .Values.api.containerPort }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: employee-api
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    app: employee-api
+  ports:
+    - port: 80
+      targetPort: {{ .Values.api.containerPort }}

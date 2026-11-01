@@ -1,0 +1,26 @@
+# Hard anti-affinity may leave replicas Pending on a single-node cluster.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: employee-spread-demo
+  namespace: employee-platform
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: employee-spread-demo
+  template:
+    metadata:
+      labels:
+        app: employee-spread-demo
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  app: employee-spread-demo
+      containers:
+        - name: demo
+          image: nginx:1.28

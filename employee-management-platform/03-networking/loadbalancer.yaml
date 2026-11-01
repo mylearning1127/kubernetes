@@ -1,0 +1,14 @@
+# Alternative to NodePort for clusters with a LoadBalancer implementation.
+# In Minikube, run: minikube tunnel (in a separate terminal).
+apiVersion: v1
+kind: Service
+metadata:
+  name: employee-frontend-lb
+  namespace: employee-platform
+spec:
+  type: LoadBalancer
+  selector:
+    app: employee-frontend
+  ports:
+    - port: 80
+      targetPort: http

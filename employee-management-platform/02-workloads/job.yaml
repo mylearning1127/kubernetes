@@ -1,0 +1,16 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: employee-one-time-report
+  namespace: employee-platform
+spec:
+  completions: 1
+  parallelism: 1
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: report
+          image: busybox:1.36
+          command: ["sh", "-c", "echo 'Generating one-time employee report'; date; sleep 5; echo 'Report complete'"]

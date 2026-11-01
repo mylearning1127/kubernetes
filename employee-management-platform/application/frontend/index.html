@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Employee Management Platform</title>
+<style>
+body{font:16px system-ui;margin:3rem auto;max-width:850px;padding:0 1rem;color:#1f2937}
+header{background:#173b63;color:white;padding:1.5rem;border-radius:12px}
+.card{border:1px solid #ddd;border-radius:10px;padding:1rem;margin-top:1rem}
+button{padding:.6rem 1rem;cursor:pointer} code{background:#eee;padding:.2rem}
+</style></head>
+<body>
+<header><h1>Employee Management Platform</h1><p>Kubernetes learning application</p></header>
+<section class="card">
+<h2>Employee directory</h2>
+<p>This static frontend calls the employee API through the browser.</p>
+<button onclick="loadEmployees()">Load employees</button>
+<pre id="result">Click the button to load records.</pre>
+</section>
+<section class="card"><h2>API endpoint</h2><p>Configure the API URL in this page for your Ingress or port-forward lab.</p>
+<p>Default: <code>/api/employees</code></p></section>
+<script>
+async function loadEmployees(){
+ const out=document.getElementById('result'); out.textContent='Loading...';
+ try { const r=await fetch('/api/employees'); out.textContent=JSON.stringify(await r.json(),null,2); }
+ catch(e){ out.textContent='API request failed: '+e; }
+}
+</script></body></html>

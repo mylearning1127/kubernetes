@@ -1,0 +1,28 @@
+# Probe reference manifest. Use the probes in api-deployment.yaml for the running API.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: employee-probe-demo
+  namespace: employee-platform
+spec:
+  containers:
+    - name: web
+      image: nginx:1.28
+      ports:
+        - containerPort: 80
+      startupProbe:
+        httpGet:
+          path: /
+          port: 80
+        periodSeconds: 5
+        failureThreshold: 30
+      livenessProbe:
+        httpGet:
+          path: /
+          port: 80
+        periodSeconds: 10
+      readinessProbe:
+        httpGet:
+          path: /
+          port: 80
+        periodSeconds: 5

@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: employee-config-demo
+  namespace: employee-platform
+spec:
+  containers:
+    - name: demo
+      image: busybox:1.36
+      command: ["sh", "-c", "echo APP_ENV=$APP_ENV; cat /etc/employee/welcome.txt; sleep 3600"]
+      env:
+        - name: APP_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: employee-config
+              key: APP_ENV
+      envFrom:
+        - secretRef:
+            name: employee-db-secret
+      volumeMounts:
+        - name: welcome
+          mountPath: /etc/employee
+          readOnly: true
+  volumes:
+    - name: welcome
+      configMap:
+        name: employee-config
+        items:
+          - key: welcome.txt
+            path: welcome.txt

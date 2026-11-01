@@ -1,0 +1,37 @@
+# Requires a NetworkPolicy-enforcing CNI. This policy allows API Pods to reach
+# PostgreSQL on TCP 5432 and allows ingress to API Pods only from frontend Pods.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: employee-api-and-db-policy
+  namespace: employee-platform
+spec:
+  podSelector:
+    matchLabels:
+      app: employee-api
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: employee-frontend
+      ports:
+        - protocol: TCP
+          port: 5000
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: employee-postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
