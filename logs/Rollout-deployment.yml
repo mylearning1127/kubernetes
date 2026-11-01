@@ -1,0 +1,272 @@
+[root@minikube manifest]# cat 19-rolling-update.yml
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: bank-app
+
+spec:
+  replicas: 3
+
+  selector:
+    matchLabels:
+      app: bank
+
+  strategy:
+    type: RollingUpdate
+
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+
+  template:
+    metadata:
+      labels:
+        app: bank
+
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.28
+
+          ports:
+            - containerPort: 80
+
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            periodSeconds: 5
+[root@minikube manifest]#
+[root@minikube manifest]#
+[root@minikube manifest]# k get all
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   5h3m
+[root@minikube manifest]#
+[root@minikube manifest]#
+[root@minikube manifest]# k apply -f 19-rolling-update.yml
+deployment.apps/bank-app created
+[root@minikube manifest]#
+
+
+============================================================================
+Rollout logs
+============================================================================
+[root@minikube manifest]# kubectl rollout status deployment/bank-app
+Waiting for deployment "bank-app" rollout to finish: 1 out of 3 new replicas have been updated...
+Waiting for deployment "bank-app" rollout to finish: 1 out of 3 new replicas have been updated...
+Waiting for deployment "bank-app" rollout to finish: 1 out of 3 new replicas have been updated...
+Waiting for deployment "bank-app" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "bank-app" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "bank-app" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "bank-app" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "bank-app" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "bank-app" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "bank-app" rollout to finish: 1 old replicas are pending termination...
+deployment "bank-app" successfully rolled out
+[root@minikube manifest]#
+
+
+============================================================================
+POD logs
+============================================================================
+[root@minikube ~]# kubectl get pods -o custom-columns="POD:.metadata.name,READY:.status.containerStatuses[*].ready,STATUS:.status.phase,AGE:.metadata.creationTimestamp,IMAGE:.spec.containers[*].image" -w
+POD                         READY    STATUS    AGE                    IMAGE
+bank-app-584cb889cf-ljwmb   <none>   Pending   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-584cb889cf-x2qjr   <none>   Pending   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-584cb889cf-k67jv   <none>   Pending   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-584cb889cf-ljwmb   <none>   Pending   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-584cb889cf-x2qjr   <none>   Pending   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-584cb889cf-k67jv   <none>   Pending   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-584cb889cf-ljwmb   false    Pending   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-584cb889cf-x2qjr   false    Pending   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-584cb889cf-k67jv   false    Pending   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-584cb889cf-x2qjr   false    Pending   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-584cb889cf-x2qjr   false    Running   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-584cb889cf-ljwmb   false    Pending   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-584cb889cf-k67jv   false    Pending   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-584cb889cf-x2qjr   true     Running   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-584cb889cf-ljwmb   false    Running   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-584cb889cf-k67jv   false    Running   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-584cb889cf-x2qjr   true     Running   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-584cb889cf-ljwmb   true     Running   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-584cb889cf-k67jv   true     Running   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-584cb889cf-k67jv   true     Running   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-584cb889cf-ljwmb   true     Running   2026-11-01T11:33:41Z   nginx:1.28
+
+
+bank-app-5747478dd6-55669   <none>   Pending   2026-11-01T11:34:34Z   nginx:1.29
+bank-app-5747478dd6-55669   <none>   Pending   2026-11-01T11:34:34Z   nginx:1.29
+bank-app-5747478dd6-55669   false    Pending   2026-11-01T11:34:34Z   nginx:1.29
+bank-app-5747478dd6-55669   false    Pending   2026-11-01T11:34:34Z   nginx:1.29
+bank-app-5747478dd6-55669   false    Running   2026-11-01T11:34:34Z   nginx:1.29
+bank-app-5747478dd6-55669   true     Running   2026-11-01T11:34:34Z   nginx:1.29
+bank-app-584cb889cf-x2qjr   true     Running   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-5747478dd6-c8wng   <none>   Pending   2026-11-01T11:34:36Z   nginx:1.29
+bank-app-584cb889cf-x2qjr   true     Running   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-5747478dd6-c8wng   <none>   Pending   2026-11-01T11:34:36Z   nginx:1.29
+bank-app-5747478dd6-c8wng   false    Pending   2026-11-01T11:34:36Z   nginx:1.29
+bank-app-584cb889cf-x2qjr   false    Succeeded   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-5747478dd6-c8wng   false    Pending     2026-11-01T11:34:36Z   nginx:1.29
+bank-app-5747478dd6-c8wng   false    Running     2026-11-01T11:34:36Z   nginx:1.29
+bank-app-5747478dd6-55669   true     Running     2026-11-01T11:34:34Z   nginx:1.29
+bank-app-5747478dd6-c8wng   true     Running     2026-11-01T11:34:36Z   nginx:1.29
+bank-app-584cb889cf-x2qjr   false    Succeeded   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-584cb889cf-ljwmb   true     Running     2026-11-01T11:33:41Z   nginx:1.28
+bank-app-584cb889cf-x2qjr   false    Succeeded   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-5747478dd6-pcxz5   <none>   Pending     2026-11-01T11:34:37Z   nginx:1.29
+bank-app-584cb889cf-ljwmb   true     Running     2026-11-01T11:33:41Z   nginx:1.28
+bank-app-5747478dd6-pcxz5   <none>   Pending     2026-11-01T11:34:37Z   nginx:1.29
+bank-app-5747478dd6-pcxz5   false    Pending     2026-11-01T11:34:37Z   nginx:1.29
+bank-app-584cb889cf-ljwmb   false    Succeeded   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-5747478dd6-pcxz5   false    Pending     2026-11-01T11:34:37Z   nginx:1.29
+bank-app-5747478dd6-pcxz5   false    Running     2026-11-01T11:34:37Z   nginx:1.29
+bank-app-5747478dd6-c8wng   true     Running     2026-11-01T11:34:36Z   nginx:1.29
+bank-app-5747478dd6-pcxz5   true     Running     2026-11-01T11:34:37Z   nginx:1.29
+bank-app-584cb889cf-ljwmb   false    Succeeded   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-584cb889cf-ljwmb   false    Succeeded   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-584cb889cf-k67jv   true     Running     2026-11-01T11:33:41Z   nginx:1.28
+bank-app-584cb889cf-k67jv   true     Running     2026-11-01T11:33:41Z   nginx:1.28
+bank-app-584cb889cf-k67jv   false    Succeeded   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-5747478dd6-pcxz5   true     Running     2026-11-01T11:34:37Z   nginx:1.29
+bank-app-584cb889cf-k67jv   false    Succeeded   2026-11-01T11:33:41Z   nginx:1.28
+bank-app-584cb889cf-k67jv   false    Succeeded   2026-11-01T11:33:41Z   nginx:1.28
+
+
+^C[root@minikube ~]# k get pods -o wide
+NAME                        READY   STATUS    RESTARTS   AGE   IP            NODE       NOMINATED NODE   READINESS GATES
+bank-app-5747478dd6-55669   1/1     Running   0          98s   10.244.0.34   minikube   <none>           <none>
+bank-app-5747478dd6-c8wng   1/1     Running   0          96s   10.244.0.35   minikube   <none>           <none>
+bank-app-5747478dd6-pcxz5   1/1     Running   0          95s   10.244.0.36   minikube   <none>           <none>
+[root@minikube ~]#
+
+=====================================================================================
+Rollout History
+====================================================================================
+[root@minikube manifest]# kubectl rollout history deployment/bank-app
+deployment.apps/bank-app
+REVISION  CHANGE-CAUSE
+1         <none>
+2         <none>
+
+[root@minikube manifest]# kubectl rollout history deployment/bank-app --revision=1
+deployment.apps/bank-app with revision #1
+Pod Template:
+  Labels:       app=bank
+        pod-template-hash=584cb889cf
+  Containers:
+   nginx:
+    Image:      nginx:1.28
+    Port:       80/TCP
+    Host Port:  0/TCP
+    Readiness:  http-get http://:80/ delay=0s timeout=1s period=5s successThreshold=1 failureThreshold=3
+    Environment:        <none>
+    Mounts:     <none>
+  Volumes:      <none>
+  Node-Selectors:       <none>
+  Tolerations:  <none>
+
+[root@minikube manifest]#
+[root@minikube manifest]#
+[root@minikube manifest]# kubectl rollout history deployment/bank-app --revision=2
+deployment.apps/bank-app with revision #2
+Pod Template:
+  Labels:       app=bank
+        pod-template-hash=5747478dd6
+  Containers:
+   nginx:
+    Image:      nginx:1.29
+    Port:       80/TCP
+    Host Port:  0/TCP
+    Readiness:  http-get http://:80/ delay=0s timeout=1s period=5s successThreshold=1 failureThreshold=3
+    Environment:        <none>
+    Mounts:     <none>
+  Volumes:      <none>
+  Node-Selectors:       <none>
+  Tolerations:  <none>
+
+[root@minikube manifest]#
+
+
+=====================================================================================
+RollBack to older revision
+====================================================================================
+[root@minikube manifest]# k rollout undo deployment/bank-app --revision=1
+error: unknown flag: --revision
+See 'kubectl rollout undo --help' for usage.
+[root@minikube manifest]# k rollout undo deployment/bank-app --to-revision=1
+Warning: resource deployments/bank-app was previously managed with 'kubectl apply'. Rolling back will not update the kubectl.kubernetes.io/last-applied-configuration annotation, which may cause unexpected behavior on future 'kubectl apply' operations. Consider using 'kubectl apply' with your previous configuration file instead.
+deployment.apps/bank-app rolled back
+[root@minikube manifest]#
+
+
+*************************************************
+Rollback output
+*************************************************
+[root@minikube manifest]# kubectl rollout status deployment/bank-app
+Waiting for deployment "bank-app" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "bank-app" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "bank-app" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "bank-app" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "bank-app" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "bank-app" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "bank-app" rollout to finish: 1 old replicas are pending termination...
+deployment "bank-app" successfully rolled out
+[root@minikube manifest]#
+
+*************************************************
+POD OUTPUT
+*************************************************
+
+[root@minikube ~]# kubectl get pods -o custom-columns="POD:.metadata.name,READY:.status.containerStatuses[*].ready,STATUS:.status.phase,AGE:.metadata.creationTimestamp,IMAGE:.spec.containers[*].image" -w
+POD                         READY   STATUS    AGE                    IMAGE
+bank-app-5747478dd6-55669   true    Running   2026-11-01T11:34:34Z   nginx:1.29
+bank-app-5747478dd6-c8wng   true    Running   2026-11-01T11:34:36Z   nginx:1.29
+bank-app-5747478dd6-pcxz5   true    Running   2026-11-01T11:34:37Z   nginx:1.29
+
+
+bank-app-584cb889cf-hdc9w   <none>   Pending   2026-11-01T11:43:45Z   nginx:1.28
+bank-app-584cb889cf-hdc9w   <none>   Pending   2026-11-01T11:43:45Z   nginx:1.28
+bank-app-584cb889cf-hdc9w   false    Pending   2026-11-01T11:43:45Z   nginx:1.28
+bank-app-584cb889cf-hdc9w   false    Pending   2026-11-01T11:43:45Z   nginx:1.28
+bank-app-584cb889cf-hdc9w   false    Running   2026-11-01T11:43:45Z   nginx:1.28
+bank-app-584cb889cf-hdc9w   true     Running   2026-11-01T11:43:45Z   nginx:1.28
+bank-app-5747478dd6-pcxz5   true     Running   2026-11-01T11:34:37Z   nginx:1.29
+bank-app-5747478dd6-pcxz5   true     Running   2026-11-01T11:34:37Z   nginx:1.29
+bank-app-584cb889cf-4x8k8   <none>   Pending   2026-11-01T11:43:47Z   nginx:1.28
+bank-app-584cb889cf-4x8k8   <none>   Pending   2026-11-01T11:43:47Z   nginx:1.28
+bank-app-584cb889cf-4x8k8   false    Pending   2026-11-01T11:43:47Z   nginx:1.28
+bank-app-5747478dd6-pcxz5   false    Succeeded   2026-11-01T11:34:37Z   nginx:1.29
+bank-app-584cb889cf-4x8k8   false    Pending     2026-11-01T11:43:47Z   nginx:1.28
+bank-app-584cb889cf-4x8k8   false    Running     2026-11-01T11:43:47Z   nginx:1.28
+bank-app-584cb889cf-hdc9w   true     Running     2026-11-01T11:43:45Z   nginx:1.28
+bank-app-5747478dd6-pcxz5   false    Succeeded   2026-11-01T11:34:37Z   nginx:1.29
+bank-app-5747478dd6-pcxz5   false    Succeeded   2026-11-01T11:34:37Z   nginx:1.29
+bank-app-584cb889cf-4x8k8   true     Running     2026-11-01T11:43:47Z   nginx:1.28
+bank-app-5747478dd6-55669   true     Running     2026-11-01T11:34:34Z   nginx:1.29
+bank-app-584cb889cf-7dnwh   <none>   Pending     2026-11-01T11:43:48Z   nginx:1.28
+bank-app-5747478dd6-55669   true     Running     2026-11-01T11:34:34Z   nginx:1.29
+bank-app-584cb889cf-7dnwh   <none>   Pending     2026-11-01T11:43:48Z   nginx:1.28
+bank-app-584cb889cf-7dnwh   false    Pending     2026-11-01T11:43:48Z   nginx:1.28
+bank-app-5747478dd6-55669   false    Succeeded   2026-11-01T11:34:34Z   nginx:1.29
+bank-app-584cb889cf-7dnwh   false    Pending     2026-11-01T11:43:48Z   nginx:1.28
+bank-app-584cb889cf-7dnwh   false    Running     2026-11-01T11:43:48Z   nginx:1.28
+bank-app-584cb889cf-7dnwh   true     Running     2026-11-01T11:43:48Z   nginx:1.28
+bank-app-584cb889cf-4x8k8   true     Running     2026-11-01T11:43:47Z   nginx:1.28
+bank-app-5747478dd6-c8wng   true     Running     2026-11-01T11:34:36Z   nginx:1.29
+bank-app-5747478dd6-55669   false    Succeeded   2026-11-01T11:34:34Z   nginx:1.29
+bank-app-5747478dd6-55669   false    Succeeded   2026-11-01T11:34:34Z   nginx:1.29
+bank-app-5747478dd6-c8wng   true     Running     2026-11-01T11:34:36Z   nginx:1.29
+bank-app-5747478dd6-c8wng   false    Succeeded   2026-11-01T11:34:36Z   nginx:1.29
+bank-app-584cb889cf-7dnwh   true     Running     2026-11-01T11:43:48Z   nginx:1.28
+bank-app-5747478dd6-c8wng   false    Succeeded   2026-11-01T11:34:36Z   nginx:1.29
+bank-app-5747478dd6-c8wng   false    Succeeded   2026-11-01T11:34:36Z   nginx:1.29
+^C[root@minikube ~]#
+[root@minikube ~]#
+[root@minikube ~]# kubectl get pods -o custom-columns="POD:.metadata.name,READY:.status.containerStatuses[*].ready,STATUS:.status.phase,AGE:.metadata.creationTimestamp,IMAGE:.spec.containers[*].image"
+POD                         READY   STATUS    AGE                    IMAGE
+bank-app-584cb889cf-4x8k8   true    Running   2026-11-01T11:43:47Z   nginx:1.28
+bank-app-584cb889cf-7dnwh   true    Running   2026-11-01T11:43:48Z   nginx:1.28
+bank-app-584cb889cf-hdc9w   true    Running   2026-11-01T11:43:45Z   nginx:1.28
+[root@minikube ~]#
+
