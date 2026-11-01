@@ -52,6 +52,9 @@ kubectl get endpointslices -n employee-platform
 
 # Open the app.
 minikube service employee-frontend-nodeport -n employee-platform
+
+kubectl apply -f 03-networking/frontend-service.yaml
+
 ```
 
 If using `minikube docker-env` in a new terminal, run `eval "$(minikube docker-env)"`
