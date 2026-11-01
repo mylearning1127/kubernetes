@@ -37,6 +37,8 @@ kubectl apply -f 05-storage/postgres-pvc.yaml
 kubectl apply -f 05-storage/postgres-deployment.yaml
 kubectl apply -f 05-storage/postgres-service.yaml
 kubectl apply -f 02-workloads/frontend-deployment.yaml
+
+Servuce account creation: # kubectl create serviceaccount employee-api -n employee-platform
 kubectl apply -f 02-workloads/api-deployment.yaml
 kubectl apply -f 02-workloads/worker-deployment.yaml
 

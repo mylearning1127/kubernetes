@@ -271,4 +271,317 @@ registry.k8s.io/kube-apiserver            v1.37.0              d1045e5c6d2f   7 
 [root@minikube employee-management-platform]#
 
 
+=============================================================================================================
+[root@minikube employee-management-platform]# kubectl apply -f 02-workloads/namespace.yaml
+namespace/employee-platform created
+[root@minikube employee-management-platform]# cat 02-workloads/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: employee-platform
+  labels:
+    purpose: kubernetes-revision-lab
+[root@minikube employee-management-platform]# k get ns
+NAME                STATUS   AGE
+default             Active   6h51m
+employee-platform   Active   19s
+kube-node-lease     Active   6h51m
+kube-public         Active   6h51m
+kube-system         Active   6h51m
+[root@minikube employee-management-platform]#
+
+=============================================================================================================
+
+[root@minikube employee-management-platform]# kubectl apply -f 04-configuration/configmap.yaml
+configmap/employee-config created
+[root@minikube employee-management-platform]# k get configmap
+NAME               DATA   AGE
+kube-root-ca.crt   1      6h52m
+[root@minikube employee-management-platform]# cat 04-configuration/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: employee-config
+  namespace: employee-platform
+data:
+  DB_HOST: employee-postgres
+  DB_PORT: "5432"
+  POSTGRES_DB: employees
+  PORT: "5000"
+  APP_ENV: lab
+  welcome.txt: |
+    Welcome to the Employee Management Platform.
+    This file is mounted from a ConfigMap.
+[root@minikube employee-management-platform]# k get configmap -n employee-platform
+NAME               DATA   AGE
+employee-config    6      35s
+kube-root-ca.crt   1      88s
+[root@minikube employee-management-platform]#
+
+=============================================================================================================
+
+[root@minikube employee-management-platform]# kubectl apply -f 04-configuration/secret.yaml
+secret/employee-db-secret created
+[root@minikube employee-management-platform]#
+[root@minikube employee-management-platform]# k get secret
+No resources found in default namespace.
+[root@minikube employee-management-platform]# k get secret -n employee-platform
+NAME                 TYPE     DATA   AGE
+employee-db-secret   Opaque   2      22s
+[root@minikube employee-management-platform]#
+
+=============================================================================================================
+
+[root@minikube employee-management-platform]# kubectl apply -f 05-storage/postgres-pvc.yaml
+persistentvolumeclaim/employee-postgres-pvc created
+[root@minikube employee-management-platform]#
+
+[root@minikube employee-management-platform]# k get pvc -n employee-platform
+NAME                    STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+employee-postgres-pvc   Bound    pvc-f1e1342d-f88a-44ff-a1e2-6b97558d43b2   1Gi        RWO            standard       <unset>                 25s
+[root@minikube employee-management-platform]#
+
+=============================================================================================================
+
+[root@minikube employee-management-platform]# kubectl apply -f 05-storage/postgres-deployment.yaml
+deployment.apps/employee-postgres created
+[root@minikube employee-management-platform]#
+[root@minikube employee-management-platform]# k get all -n employee-platform
+NAME                                    READY   STATUS              RESTARTS   AGE
+pod/employee-postgres-8d78f86bf-g7dnt   0/1     ContainerCreating   0          4s
+
+NAME                                READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/employee-postgres   0/1     1            0           4s
+
+NAME                                          DESIRED   CURRENT   READY   AGE
+replicaset.apps/employee-postgres-8d78f86bf   1         1         0       4s
+[root@minikube employee-management-platform]#
+
+****************************************************************************************************************
+
+[root@minikube employee-management-platform]# k get all -n employee-platform
+NAME                                    READY   STATUS    RESTARTS   AGE
+pod/employee-postgres-8d78f86bf-g7dnt   1/1     Running   0          41s
+
+NAME                                READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/employee-postgres   1/1     1            1           41s
+
+NAME                                          DESIRED   CURRENT   READY   AGE
+replicaset.apps/employee-postgres-8d78f86bf   1         1         1       41s
+[root@minikube employee-management-platform]#
+
+=============================================================================================================
+
+[root@minikube employee-management-platform]# kubectl apply -f 05-storage/postgres-service.yaml
+service/employee-postgres created
+[root@minikube employee-management-platform]#
+[root@minikube employee-management-platform]#
+[root@minikube employee-management-platform]# k get all -n employee-platform
+NAME                                    READY   STATUS    RESTARTS   AGE
+pod/employee-postgres-8d78f86bf-g7dnt   1/1     Running   0          65s
+
+NAME                        TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+service/employee-postgres   ClusterIP   10.100.133.99   <none>        5432/TCP   4s
+
+NAME                                READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/employee-postgres   1/1     1            1           65s
+
+NAME                                          DESIRED   CURRENT   READY   AGE
+replicaset.apps/employee-postgres-8d78f86bf   1         1         1       65s
+[root@minikube employee-management-platform]#
+
+
+=============================================================================================================
+
+[root@minikube employee-management-platform]# kubectl apply -f 02-workloads/frontend-deployment.yaml
+deployment.apps/employee-frontend created
+[root@minikube employee-management-platform]#
+[root@minikube employee-management-platform]# k get all -n employee-platform
+NAME                                     READY   STATUS    RESTARTS   AGE
+pod/employee-frontend-84cd97bbf6-mrjf4   0/1     Running   0          3s
+pod/employee-frontend-84cd97bbf6-vsrsb   0/1     Running   0          3s
+pod/employee-postgres-8d78f86bf-g7dnt    1/1     Running   0          90s
+
+NAME                        TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+service/employee-postgres   ClusterIP   10.100.133.99   <none>        5432/TCP   29s
+
+NAME                                READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/employee-frontend   0/2     2            0           3s
+deployment.apps/employee-postgres   1/1     1            1           90s
+
+NAME                                           DESIRED   CURRENT   READY   AGE
+replicaset.apps/employee-frontend-84cd97bbf6   2         2         0       3s
+replicaset.apps/employee-postgres-8d78f86bf    1         1         1       90s
+[root@minikube employee-management-platform]#
+
+=============================================================================================================
+
+[root@minikube employee-management-platform]#  kubectl get serviceaccounts -n employee-platform
+NAME      AGE
+default   10m
+
+[root@minikube employee-management-platform]# kubectl create serviceaccount employee-api -n employee-platform
+serviceaccount/employee-api created
+[root@minikube employee-management-platform]#
+
+=============================================================================================================
+
+[root@minikube employee-management-platform]# kubectl apply -f 02-workloads/api-deployment.yaml
+deployment.apps/employee-api created
+[root@minikube employee-management-platform]#
+
+[root@minikube employee-management-platform]# k get all -n employee-platform
+NAME                                     READY   STATUS    RESTARTS   AGE
+pod/employee-api-7f6446b8cd-r6572        1/1     Running   0          71s
+pod/employee-api-7f6446b8cd-sbmfc        1/1     Running   0          71s
+pod/employee-frontend-84cd97bbf6-mrjf4   1/1     Running   0          7m5s
+pod/employee-frontend-84cd97bbf6-vsrsb   1/1     Running   0          7m5s
+pod/employee-postgres-8d78f86bf-g7dnt    1/1     Running   0          8m32s
+
+NAME                        TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+service/employee-postgres   ClusterIP   10.100.133.99   <none>        5432/TCP   7m31s
+
+NAME                                READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/employee-api        2/2     2            2           6m39s
+deployment.apps/employee-frontend   2/2     2            2           7m5s
+deployment.apps/employee-postgres   1/1     1            1           8m32s
+
+NAME                                           DESIRED   CURRENT   READY   AGE
+replicaset.apps/employee-api-7f6446b8cd        2         2         2       6m39s
+replicaset.apps/employee-frontend-84cd97bbf6   2         2         2       7m5s
+replicaset.apps/employee-postgres-8d78f86bf    1         1         1       8m32s
+[root@minikube employee-management-platform]#
+
+=============================================================================================================
+
+[root@minikube employee-management-platform]# kubectl apply -f 02-workloads/worker-deployment.yaml
+deployment.apps/employee-worker created
+[root@minikube employee-management-platform]#
+[root@minikube employee-management-platform]#
+[root@minikube employee-management-platform]# k get all -n employee-platform
+NAME                                     READY   STATUS    RESTARTS   AGE
+pod/employee-api-7f6446b8cd-r6572        1/1     Running   0          2m20s
+pod/employee-api-7f6446b8cd-sbmfc        1/1     Running   0          2m20s
+pod/employee-frontend-84cd97bbf6-mrjf4   1/1     Running   0          8m14s
+pod/employee-frontend-84cd97bbf6-vsrsb   1/1     Running   0          8m14s
+pod/employee-postgres-8d78f86bf-g7dnt    1/1     Running   0          9m41s
+pod/employee-worker-66b47bb79f-bf5fh     1/1     Running   0          4s
+
+NAME                        TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+service/employee-postgres   ClusterIP   10.100.133.99   <none>        5432/TCP   8m40s
+
+NAME                                READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/employee-api        2/2     2            2           7m48s
+deployment.apps/employee-frontend   2/2     2            2           8m14s
+deployment.apps/employee-postgres   1/1     1            1           9m41s
+deployment.apps/employee-worker     1/1     1            1           4s
+
+NAME                                           DESIRED   CURRENT   READY   AGE
+replicaset.apps/employee-api-7f6446b8cd        2         2         2       7m48s
+replicaset.apps/employee-frontend-84cd97bbf6   2         2         2       8m14s
+replicaset.apps/employee-postgres-8d78f86bf    1         1         1       9m41s
+replicaset.apps/employee-worker-66b47bb79f     1         1         1       4s
+[root@minikube employee-management-platform]#
+
+=============================================================================================================
+
+[root@minikube employee-management-platform]# k get all -n employee-platform
+NAME                                     READY   STATUS    RESTARTS   AGE
+pod/employee-api-7f6446b8cd-r6572        1/1     Running   0          3m6s
+pod/employee-api-7f6446b8cd-sbmfc        1/1     Running   0          3m6s
+pod/employee-frontend-84cd97bbf6-mrjf4   1/1     Running   0          9m
+pod/employee-frontend-84cd97bbf6-vsrsb   1/1     Running   0          9m
+pod/employee-postgres-8d78f86bf-g7dnt    1/1     Running   0          10m
+pod/employee-worker-66b47bb79f-bf5fh     1/1     Running   0          50s
+
+NAME                        TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+service/employee-api        ClusterIP   10.105.48.15    <none>        80/TCP     4s
+service/employee-postgres   ClusterIP   10.100.133.99   <none>        5432/TCP   9m26s
+
+NAME                                READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/employee-api        2/2     2            2           8m34s
+deployment.apps/employee-frontend   2/2     2            2           9m
+deployment.apps/employee-postgres   1/1     1            1           10m
+deployment.apps/employee-worker     1/1     1            1           50s
+
+NAME                                           DESIRED   CURRENT   READY   AGE
+replicaset.apps/employee-api-7f6446b8cd        2         2         2       8m34s
+replicaset.apps/employee-frontend-84cd97bbf6   2         2         2       9m
+replicaset.apps/employee-postgres-8d78f86bf    1         1         1       10m
+replicaset.apps/employee-worker-66b47bb79f     1         1         1       50s
+[root@minikube employee-management-platform]#
+
+=============================================================================================================
+
+[root@minikube employee-management-platform]# kubectl apply -f 03-networking/nodeport.yaml
+service/employee-frontend-nodeport created
+[root@minikube employee-management-platform]#
+[root@minikube employee-management-platform]# k get all -n employee-platform
+NAME                                     READY   STATUS    RESTARTS   AGE
+pod/employee-api-7f6446b8cd-r6572        1/1     Running   0          3m35s
+pod/employee-api-7f6446b8cd-sbmfc        1/1     Running   0          3m35s
+pod/employee-frontend-84cd97bbf6-mrjf4   1/1     Running   0          9m29s
+pod/employee-frontend-84cd97bbf6-vsrsb   1/1     Running   0          9m29s
+pod/employee-postgres-8d78f86bf-g7dnt    1/1     Running   0          10m
+pod/employee-worker-66b47bb79f-bf5fh     1/1     Running   0          79s
+
+NAME                                 TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+service/employee-api                 ClusterIP   10.105.48.15    <none>        80/TCP         33s
+service/employee-frontend-nodeport   NodePort    10.103.76.42    <none>        80:30080/TCP   2s
+service/employee-postgres            ClusterIP   10.100.133.99   <none>        5432/TCP       9m55s
+
+NAME                                READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/employee-api        2/2     2            2           9m3s
+deployment.apps/employee-frontend   2/2     2            2           9m29s
+deployment.apps/employee-postgres   1/1     1            1           10m
+deployment.apps/employee-worker     1/1     1            1           79s
+
+NAME                                           DESIRED   CURRENT   READY   AGE
+replicaset.apps/employee-api-7f6446b8cd        2         2         2       9m3s
+replicaset.apps/employee-frontend-84cd97bbf6   2         2         2       9m29s
+replicaset.apps/employee-postgres-8d78f86bf    1         1         1       10m
+replicaset.apps/employee-worker-66b47bb79f     1         1         1       79s
+[root@minikube employee-management-platform]#
+
+=============================================================================================================
+
+[root@minikube employee-management-platform]# kubectl get all -n employee-platform
+NAME                                     READY   STATUS    RESTARTS   AGE
+pod/employee-api-7f6446b8cd-r6572        1/1     Running   0          4m3s
+pod/employee-api-7f6446b8cd-sbmfc        1/1     Running   0          4m3s
+pod/employee-frontend-84cd97bbf6-mrjf4   1/1     Running   0          9m57s
+pod/employee-frontend-84cd97bbf6-vsrsb   1/1     Running   0          9m57s
+pod/employee-postgres-8d78f86bf-g7dnt    1/1     Running   0          11m
+pod/employee-worker-66b47bb79f-bf5fh     1/1     Running   0          107s
+
+NAME                                 TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+service/employee-api                 ClusterIP   10.105.48.15    <none>        80/TCP         61s
+service/employee-frontend-nodeport   NodePort    10.103.76.42    <none>        80:30080/TCP   30s
+service/employee-postgres            ClusterIP   10.100.133.99   <none>        5432/TCP       10m
+
+NAME                                READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/employee-api        2/2     2            2           9m31s
+deployment.apps/employee-frontend   2/2     2            2           9m57s
+deployment.apps/employee-postgres   1/1     1            1           11m
+deployment.apps/employee-worker     1/1     1            1           107s
+
+NAME                                           DESIRED   CURRENT   READY   AGE
+replicaset.apps/employee-api-7f6446b8cd        2         2         2       9m31s
+replicaset.apps/employee-frontend-84cd97bbf6   2         2         2       9m57s
+replicaset.apps/employee-postgres-8d78f86bf    1         1         1       11m
+replicaset.apps/employee-worker-66b47bb79f     1         1         1       107s
+[root@minikube employee-management-platform]#
+[root@minikube employee-management-platform]# kubectl get pvc -n employee-platform
+NAME                    STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+employee-postgres-pvc   Bound    pvc-f1e1342d-f88a-44ff-a1e2-6b97558d43b2   1Gi        RWO            standard       <unset>                 12m
+[root@minikube employee-management-platform]#
+[root@minikube employee-management-platform]#
+[root@minikube employee-management-platform]# kubectl get endpointslices -n employee-platform
+NAME                               ADDRESSTYPE   PORTS   ENDPOINTS                 AGE
+employee-api-ffdsz                 IPv4          5000    10.244.0.44,10.244.0.43   74s
+employee-frontend-nodeport-g8kvg   IPv4          80      10.244.0.41,10.244.0.42   43s
+employee-postgres-sbdgk            IPv4          5432    10.244.0.40               10m
+[root@minikube employee-management-platform]#
+
+=============================================================================================================
 
