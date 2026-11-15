@@ -1,0 +1,11 @@
+# Advanced: try these Pod-spec fields on a workload.
+# nodeSelector: {kubernetes.io/os: linux}
+# affinity:
+#   podAntiAffinity:
+#     preferredDuringSchedulingIgnoredDuringExecution:
+#     - weight: 100
+#       podAffinityTerm:
+#         topologyKey: kubernetes.io/hostname
+#         labelSelector: {matchLabels: {app: employee-api}}
+# tolerations:
+# - {key: dedicated, operator: Equal, value: learning, effect: NoSchedule}

@@ -1,0 +1,4 @@
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: employee-config, namespace: employee-platform}
+data: {DB_HOST: employee-postgres, DB_NAME: employees, DB_USER: appuser}

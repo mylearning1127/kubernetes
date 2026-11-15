@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata: {name: employee-report-cron, namespace: employee-platform}
+spec:
+ schedule: "*/5 * * * *"
+ concurrencyPolicy: Forbid
+ successfulJobsHistoryLimit: 2
+ failedJobsHistoryLimit: 2
+ jobTemplate:
+  spec:
+   backoffLimit: 2
+   template:
+    metadata: {labels: {app: employee-report}}
+    spec:
+     restartPolicy: Never
+     containers:
+     - name: report
+       image: busybox:1.36
+       command: ["sh","-c","echo Report ran at $(date); sleep 5"]

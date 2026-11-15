@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata: {name: employee-node-agent, namespace: employee-platform}
+spec:
+ selector: {matchLabels: {app: employee-node-agent}}
+ template:
+  metadata: {labels: {app: employee-node-agent}}
+  spec:
+   containers:
+   - name: agent
+     image: busybox:1.36
+     command: ["sh","-c","while true; do echo node-agent heartbeat; sleep 30; done"]
+     resources: {requests: {cpu: 10m, memory: 16Mi}, limits: {cpu: 50m, memory: 32Mi}}
